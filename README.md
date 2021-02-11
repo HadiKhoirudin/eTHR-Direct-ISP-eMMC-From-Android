@@ -1,5 +1,5 @@
 # eTHR Direct ISP eMMC From Android
-This is shell script design for run eTHR Tool from Android.
+This is shell script design for run eTHR Tool from Android terminal like thermux.
 
 Instructions :
 1. Download eTHR & mkfs.ext4 as RAW files
@@ -14,3 +14,5 @@ Instructions :
    eTHR
 9. Enjoy
 
+Note :
+“You can edit or change eTHR file for futher development.”
