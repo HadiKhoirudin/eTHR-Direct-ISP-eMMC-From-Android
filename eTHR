@@ -65,15 +65,6 @@ function datetime() {
 	NOW=$(date +"%d-%m-%Y_%H%M")
 }
 
-function format_data() {
-    echo "Formatting Data"
-	mke2fs $TARGET_USB/by-name/userdata
-	sleep 3
-	e2fsck -pcvf $TARGET_USB/by-name/userdata
-	echo ""
-	sleep 10
-}
-
 function mount_data() {
     echo "Mounting Data Partition"
     mount -t auto $TARGET_USB/by-name/userdata $DIR_DATA
@@ -92,18 +83,38 @@ function mount_system() {
 
 function umount_data() {
     echo "Umount Data Partition"
-	umount $TARGET_USB/by-name/userdata $DIR_DATA
+	umount $DIR_DATA
 }
 
 function umount_system() {
     echo "Umount System Partition"
-	umount $TARGET_USB/by-name/system $DIR_SYSTEM
+	umount $DIR_SYSTEM
+}
+
+function format_data() {
+    echo "Formatting Data"
+	mount_data
+	sleep 4
+	if [ -e "$DIR_DATA/app" ] ; then
+	rm -rf $DIR_DATA/*
+	mkdir $DIR_DATA/app
+	echo "Success!"
+	echo "Data Wiped"
+	else
+	auto_unmount
+	sleep 4
+	mke2fs -F $TARGET_USB/by-name/userdata
+	echo "Success!"
+	echo "Data Formated"
+	fi
+	echo ""
+	sleep 8
 }
 
 function remove_pin_gesture_lock() {
     echo "Removing PIN Gesture Lockscreen"
 	mount -t auto $TARGET_USB/by-name/userdata $DIR_DATA
-	if [ -e "$DIR_DATA/system" ] ; then
+  if [ -e "$DIR_DATA/system" ] ; then
 	sleep 1
 	cd $DIR_DATA/system
 	rm *.key
@@ -124,9 +135,7 @@ function remove_frp() {
     echo "Removing FRP / Google Account"
     echo " "
     if [ -e "$TARGET_USB/by-name/frp" ] ; then
-	mke2fs $TARGET_USB/by-name/frp
-	sleep 3
-	e2fsck -pcvf $TARGET_USB/by-name/frp
+	mke2fs -F $TARGET_USB/by-name/frp
     echo "Success!"
     sleep 5
     else
@@ -237,15 +246,12 @@ echo -ne "
 eTHR Direct ISP Android CLI eMMC Tool [10/02/2021]
 - Created By : Hadi Khoirudin, S. Kom
 
-Features : 
-* Format Data
+* Format / Wipe Data
 * Mount Unencrypted Partition
 * Only Remove PIN / Gesture Lockscreen
 * Only Remove FRP / Google Account
-* Write Single Partition
-* Read Single Partition
-* Write Dump User Area
-* Read Dump User Area
+* Write & Read Single Partition
+* Write & Read Dump eMMC / eMCP
 "
 
 if [ -e "$TARGET_USB/sda" ] ; then
@@ -279,7 +285,9 @@ $(ColorBlue 'Choose an option:') "
 else
 echo -ne "
 Error : eMMC null / not detected!
-Check USB OTG & eTHR connection then try again... "
+Check USB OTG & eTHR connection then try again... 
+
+"
 sleep 5
 fi
 }
