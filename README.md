@@ -1,8 +1,16 @@
 # eTHR Direct ISP eMMC From Android
 This is shell script design for run eTHR Tool from Android terminal like thermux.
 
+And this only work on older Android version like Kitkat 4.4.4
+
+If you has newer Android version this shell script will works very well on TWRP Recovery.
+
+Just unpack recovery.img and put eTHR on ~/ramdisk/sbin then repack & flash to your device.
+
+Make sure your Android has OTG support before use eTHR.
+
 Instructions :
-1. Download eTHR & mkfs.ext4 as RAW files
+1. Download eTHR & mke2fs as RAW files
 2. Edit eTHR file with text editor
 3. Change TARGET_USB to match with your Android USB Host.
 4. Change DIR_FILE to directory or to correct storage folder.
