@@ -82,8 +82,18 @@ function umount_system() {
 function remove_pin_gesture_lock() {
     echo "Removing PIN Gesture Lockscreen"
 	mkdir /root/data
-	mount $TARGET_USB/by-name/userdata /root/data
-	echo "Data mounted on /root/data"
+	mount -t auto $TARGET_USB/by-name/userdata /root/data
+	if [ -e "/root/data/system" ] ; then
+	sleep 1
+	cd /root/data/system
+	rm *.key
+	cd /
+	echo "PIN Gesture Lock Removed"
+	else
+	echo "Error!"
+	echo "Partition Data Encrypted"
+        echo "Operation Aborted..."
+  fi
 	echo ""
 }
 
