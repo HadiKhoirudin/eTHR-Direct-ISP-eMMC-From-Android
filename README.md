@@ -1,7 +1,10 @@
 # eTHR Direct ISP eMMC From Android
 This is shell script design for run eTHR Tool from Android terminal like thermux.
 
-And this only work on older Android version like Kitkat 4.4.4
+And this only work on older Android version like Kitkat 4.4.4.
+
+But will be better if your device using custom rom with ext2, ext3, ext4, f2fs file kernel support.
+
 
 If you has newer Android version this shell script will works very well on TWRP Recovery.
 
