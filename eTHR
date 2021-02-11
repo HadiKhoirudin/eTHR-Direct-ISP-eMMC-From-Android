@@ -1,0 +1,213 @@
+#!/system/bin/sh
+##################################################################################
+#
+# eTHR ISP Android CLI Tool - Hadi Khoirudin, S. Kom.
+#
+# Silahkan edit file ini untuk disesuaikan dengan HP yang akan digunakan.
+#
+# 1. Sambungkan eTHR melalui USB OTGnya
+# *Untuk mengetahui TARGET_USB silahkan : 
+# *Gunakan aplikasi Root Explorer
+# *Buka file yang bernama fstab
+# *Misal : fstab.qcom fstab.sc8920 dll
+# *Temukan baris usb
+# *Misal : /devices/soc/78db000.usb/msm_hsusb_host*
+# *Kemudian ubah menjadi : /dev/block/platform/soc/78db000.usb/msm_hsusb_host
+#
+# 2. Ubah TARGET_USB ini dengan target yang telah disesuaikan seperti di atas :
+#
+TARGET_USB=/dev/block/platform/soc/78db000.usb/msm_hsusb_host
+#
+#
+#
+# Set-Up Android
+mount -o rw,remount /system && mount -o rw,remount rootfs
+NOW=$(date +"%d-%m-%Y_%H%M")
+
+# Set default sdcard location for read & save file
+DIR_FILE=/sdcard
+
+if [ -e "$DIR_FILE/eTHR" ] ; then 
+clear
+else
+mkdir $DIR_FILE/eTHR
+mkdir $DIR_FILE/eTHR/Read
+mkdir $DIR_FILE/eTHR/Read/Dump
+mkdir $DIR_FILE/eTHR/Read/Partitions
+
+mkdir $DIR_FILE/eTHR/Write
+mkdir $DIR_FILE/eTHR/Write/Dump
+mkdir $DIR_FILE/eTHR/Write/Partitions
+fi
+##################################################################################
+
+function format_data() {
+    echo "Formatting Data"
+	mkfs.ext4 $TARGET_USB/by-name/userdata
+	echo ""
+}
+
+function mount_data() {
+    echo "Mounting Data Partition"
+		if [ -e "/root/data" ] ; then sleep 1
+     else
+     mkdir /root/data
+     fi
+	mount -t auto $TARGET_USB/by-name/userdata /root/data
+	echo "Data mounted on /root/data"
+	echo ""
+}
+
+function mount_system() {
+    echo "Mounting System Partition"
+		if [ -e "/root/system" ] ; then sleep 1
+     else
+     mkdir /root/system
+     fi
+	mount -t auto $TARGET_USB/by-name/system /root/system
+	echo "System mounted on /root/system"
+	echo ""
+}
+
+function umount_data() {
+    echo "Umount Data Partition"
+	umount $TARGET_USB/by-name/userdata /root/data
+}
+
+function umount_system() {
+    echo "Umount System Partition"
+	umount $TARGET_USB/by-name/system /root/system
+}
+
+function remove_pin_gesture_lock() {
+    echo "Removing PIN Gesture Lockscreen"
+	mkdir /root/data
+	mount $TARGET_USB/by-name/userdata /root/data
+	echo "Data mounted on /root/data"
+	echo ""
+}
+
+function remove_frp() {
+    echo "Removing FRP / Google Account"
+    echo " "
+    if [ -e "$TARGET_USB/by-name/frp" ] ; then 
+    mkfs.ext4 $TARGET_USB/by-name/frp
+    else
+    echo "Error!"
+    echo "This Device Has No FRP Partition!"
+    echo "Operation Aborted..."
+    sleep 8
+    fi
+	echo ""
+}
+
+function write_single_partition() {
+    echo "Select Partition :"
+	echo ""
+}
+
+function read_single_partition() {
+    echo "Select Partition :"
+	echo ""
+}
+
+function write_dump() {
+    echo "Write Dump file to eMMC"
+	dd if=$DIR_FILE/eTHR/Write/Dump/userarea.bin of=$TARGET_USB/sda
+	echo "Success!"
+	echo "Writed to eMMC..."
+	echo ""
+}
+
+function read_dump() {
+    echo "Read & Saving Dump eMMC"
+	mkdir $DIR_FILE/eTHR/Read/Dump/$NOW
+	dd if=$TARGET_USB/sda of=$DIR_FILE/eTHR/Read/Dump/$NOW/userarea.bin
+	echo "Success!"
+	echo "Saved to $DIR_FILE/eTHR/Read/Dump..."
+	echo ""
+}
+
+function auto_unmount() {
+if grep -qs "/root/data" /proc/mounts; then 
+umount_data
+fi
+
+if grep -qs "/root/system" /proc/mounts; then 
+umount_system
+fi
+}
+##################################################################################
+##
+# Color  Variables
+##
+green='\e[32m'
+blue='\e[34m'
+clear='\e[0m'
+
+##
+# Color Functions
+##
+
+ColorGreen(){
+	echo -ne $green$1$clear
+}
+ColorBlue(){
+	echo -ne $blue$1$clear
+}
+
+menu(){
+clear
+echo -ne "
+eTHR Direct ISP Android CLI eMMC Tool [10/02/2021]
+- Created By : Hadi Khoirudin, S. Kom
+
+Features : 
+* Format Data
+* Mount Unencrypted Partition
+* Only Remove PIN / Gesture Lockscreen
+* Only Remove FRP / Google Account
+* Write Single Partition
+* Read Single Partition
+* Write Dump User Area
+* Read Dump User Area
+"
+
+if [ -e "$TARGET_USB/sda" ] ; then
+echo -ne "
+Main Menu : 
+$(ColorGreen '1)') Format / Wipe Data
+$(ColorGreen '2)') Mount Data
+$(ColorGreen '3)') Mount System
+$(ColorGreen '4)') Remove PIN / Gesture Lockscreen
+$(ColorGreen '5)') Remove FRP / Google Account
+$(ColorGreen '6)') Write Single Partition
+$(ColorGreen '7)') Read Single Partition
+$(ColorGreen '8)') Write Dump User Area
+$(ColorGreen '9)') Read Dump User Area
+$(ColorGreen '0)') Exit
+$(ColorBlue 'Choose an option:') "
+        read a
+        case $a in
+	        1) format_data ; menu ;;
+	        2) mount_data ; menu ;;
+	        3) mount_system ; menu ;;
+	        4) remove_pin_gesture_lock ; menu ;;
+	        5) remove_frp ; menu ;;
+	        6) write_single_partition ; menu ;;
+	        7) read_single_partition ; menu ;;
+	        8) write_dump ; menu ;;
+	        9) read_dump ; menu ;;
+		0) auto_unmount ; exit 0 ;;
+		*) echo -e $red"Wrong option."$clear; WrongCommand;;
+        esac
+else
+echo -ne "
+Error : eMMC null / not detected!
+Check USB OTG & eTHR connection then try again... "
+sleep 5
+fi
+}
+
+# Call the menu function
+menu
