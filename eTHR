@@ -28,7 +28,7 @@ NOW=$(date +"%d-%m-%Y_%H%M")
 DIR_FILE=/sdcard
 
 if [ -e "$DIR_FILE/eTHR" ] ; then 
-clear
+OK=true
 else
 mkdir $DIR_FILE/eTHR
 mkdir $DIR_FILE/eTHR/Read
@@ -39,34 +39,50 @@ mkdir $DIR_FILE/eTHR/Write
 mkdir $DIR_FILE/eTHR/Write/Dump
 mkdir $DIR_FILE/eTHR/Write/Partitions
 fi
+
+# Set default mount location for data & system
+DIR_DATA=/storage/data
+
+if [ -e "$DIR_DATA" ] ; then 
+chown root:media_rw $DIR_DATA
+else
+mkdir $DIR_DATA
+chown root:media_rw $DIR_DATA
+fi
+
+DIR_SYSTEM=/storage/system
+
+if [ -e "$DIR_SYSTEM" ] ; then 
+chown root:media_rw $DIR_SYSTEM
+else
+mkdir $DIR_SYSTEM
+chown root:media_rw $DIR_SYSTEM
+fi
+
+
 ##################################################################################
 
 function format_data() {
     echo "Formatting Data"
 	mkfs.ext4 $TARGET_USB/by-name/userdata
 	echo ""
+	sleep 5
 }
 
 function mount_data() {
     echo "Mounting Data Partition"
-		if [ -e "/root/data" ] ; then sleep 1
-     else
-     mkdir /root/data
-     fi
-	mount -t auto $TARGET_USB/by-name/userdata /root/data
-	echo "Data mounted on /root/data"
-	echo ""
+    mount -t auto $TARGET_USB/by-name/userdata $DIR_DATA
+    echo "Data mounted on $DIR_DATA"
+    echo ""
+    sleep 5
 }
 
 function mount_system() {
     echo "Mounting System Partition"
-		if [ -e "/root/system" ] ; then sleep 1
-     else
-     mkdir /root/system
-     fi
-	mount -t auto $TARGET_USB/by-name/system /root/system
-	echo "System mounted on /root/system"
-	echo ""
+    mount -t auto $TARGET_USB/by-name/system $DIR_SYSTEM
+    echo "System mounted on $DIR_SYSTEM"
+    echo ""
+    sleep 5
 }
 
 function umount_data() {
@@ -89,12 +105,15 @@ function remove_pin_gesture_lock() {
 	rm *.key
 	cd /
 	echo "PIN Gesture Lock Removed"
+	echo ""
+	sleep 5
 	else
 	echo "Error!"
 	echo "Partition Data Encrypted"
         echo "Operation Aborted..."
   fi
 	echo ""
+	sleep 5
 }
 
 function remove_frp() {
@@ -102,11 +121,13 @@ function remove_frp() {
     echo " "
     if [ -e "$TARGET_USB/by-name/frp" ] ; then 
     mkfs.ext4 $TARGET_USB/by-name/frp
+    echo "Success!"
+    sleep 5
     else
     echo "Error!"
     echo "This Device Has No FRP Partition!"
     echo "Operation Aborted..."
-    sleep 8
+    sleep 5
     fi
 	echo ""
 }
@@ -127,6 +148,7 @@ function write_dump() {
 	echo "Success!"
 	echo "Writed to eMMC..."
 	echo ""
+	sleep 10
 }
 
 function read_dump() {
@@ -136,6 +158,7 @@ function read_dump() {
 	echo "Success!"
 	echo "Saved to $DIR_FILE/eTHR/Read/Dump..."
 	echo ""
+	sleep 10
 }
 
 function auto_unmount() {
