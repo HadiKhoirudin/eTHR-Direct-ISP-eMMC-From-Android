@@ -2,7 +2,8 @@
 ##################################################################################
 #
 # eTHR ISP Android CLI Tool - Hadi Khoirudin, S. Kom.
-#
+# Custom ROM Version 1.0 - Beta [11-02-2021]
+# 
 # Silahkan edit file ini untuk disesuaikan dengan HP yang akan digunakan.
 #
 # 1. Sambungkan eTHR melalui USB OTGnya
@@ -22,7 +23,6 @@ TARGET_USB=/dev/block/platform/soc/78db000.usb/msm_hsusb_host
 #
 # Set-Up Android
 mount -o rw,remount /system && mount -o rw,remount rootfs
-NOW=$(date +"%d-%m-%Y_%H%M")
 
 # Set default sdcard location for read & save file
 DIR_FILE=/sdcard
@@ -59,14 +59,19 @@ mkdir $DIR_SYSTEM
 chown root:media_rw $DIR_SYSTEM
 fi
 
-
 ##################################################################################
+
+function datetime() {
+	NOW=$(date +"%d-%m-%Y_%H%M")
+}
 
 function format_data() {
     echo "Formatting Data"
-	mkfs.ext4 $TARGET_USB/by-name/userdata
+	mke2fs $TARGET_USB/by-name/userdata
+	sleep 3
+	e2fsck -pcvf $TARGET_USB/by-name/userdata
 	echo ""
-	sleep 5
+	sleep 10
 }
 
 function mount_data() {
@@ -87,21 +92,20 @@ function mount_system() {
 
 function umount_data() {
     echo "Umount Data Partition"
-	umount $TARGET_USB/by-name/userdata /root/data
+	umount $TARGET_USB/by-name/userdata $DIR_DATA
 }
 
 function umount_system() {
     echo "Umount System Partition"
-	umount $TARGET_USB/by-name/system /root/system
+	umount $TARGET_USB/by-name/system $DIR_SYSTEM
 }
 
 function remove_pin_gesture_lock() {
     echo "Removing PIN Gesture Lockscreen"
-	mkdir /root/data
-	mount -t auto $TARGET_USB/by-name/userdata /root/data
-	if [ -e "/root/data/system" ] ; then
+	mount -t auto $TARGET_USB/by-name/userdata $DIR_DATA
+	if [ -e "$DIR_DATA/system" ] ; then
 	sleep 1
-	cd /root/data/system
+	cd $DIR_DATA/system
 	rm *.key
 	cd /
 	echo "PIN Gesture Lock Removed"
@@ -119,8 +123,10 @@ function remove_pin_gesture_lock() {
 function remove_frp() {
     echo "Removing FRP / Google Account"
     echo " "
-    if [ -e "$TARGET_USB/by-name/frp" ] ; then 
-    mkfs.ext4 $TARGET_USB/by-name/frp
+    if [ -e "$TARGET_USB/by-name/frp" ] ; then
+	mke2fs $TARGET_USB/by-name/frp
+	sleep 3
+	e2fsck -pcvf $TARGET_USB/by-name/frp
     echo "Success!"
     sleep 5
     else
@@ -133,12 +139,41 @@ function remove_frp() {
 }
 
 function write_single_partition() {
+	echo ""
+	echo "Write Single Partition to eMMC"
     echo "Select Partition :"
+	
+	select list1 in $(ls $TARGET_USB/by-name)
+	do
+	echo "Partition selected is ::" $list1
+	if [ -e "$DIR_FILE/eTHR/Write/Partitions/$list1.img" ] ; then
+	dd if=$DIR_FILE/eTHR/Write/Partitions/$list1.img of=$TARGET_USB/by-name/$list1.img
+	sleep 8
+	else
+	echo "Error!"
+	echo "Missing ::" $DIR_FILE/eTHR/Write/Partitions/$list1.img
+	sleep 8
+	fi
+	break
+	done
+
 	echo ""
 }
 
 function read_single_partition() {
+	echo ""
+	echo "Read Single Partition from eMMC"
     echo "Select Partition :"
+	
+	select list2 in $(ls $TARGET_USB/by-name)
+	do
+	echo "Partition selected is ::" $list2
+	mkdir $DIR_FILE/eTHR/Read/Partitions/$NOW
+	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Read/Partitions/$NOW/$list2.img
+	sleep 8
+	break
+	done
+
 	echo ""
 }
 
@@ -162,13 +197,19 @@ function read_dump() {
 }
 
 function auto_unmount() {
-if grep -qs "/root/data" /proc/mounts; then 
+if grep -qs $DIR_DATA /proc/mounts; then 
 umount_data
 fi
 
-if grep -qs "/root/system" /proc/mounts; then 
+if grep -qs $DIR_SYSTEM /proc/mounts; then 
 umount_system
 fi
+clear
+}
+
+function WrongCommand() {
+sleep 2
+menu
 }
 ##################################################################################
 ##
@@ -190,6 +231,7 @@ ColorBlue(){
 }
 
 menu(){
+datetime
 clear
 echo -ne "
 eTHR Direct ISP Android CLI eMMC Tool [10/02/2021]
