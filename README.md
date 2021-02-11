@@ -15,15 +15,20 @@ Make sure your Android has OTG support before use eTHR.
 Instructions :
 1. Download eTHR & mke2fs as RAW files
 2. Edit eTHR file with text editor
-3. Change TARGET_USB to match with your Android USB Host.
-4. Change DIR_FILE to directory or to correct storage folder.
-5. Copy both files to /system/bin directory
-6. Set both permission files to 755 or open terminal to run commands :
+3. If eTHR exec from TWRP Recovery please change
+   From :
+   #!/system/bin/sh
+   To :
+   #!/sbin/sh
+4. Change TARGET_USB to match with your Android USB Host.
+5. Change DIR_FILE to directory or to correct storage folder.
+6. Copy both files to /system/bin directory
+7. Set both permission files to 755 or open terminal to run commands :
    chmod 755 /system/bin/eTHR && chmod 755 /system/bin/mkfs.ext4
-7. Connect eTHR to Android with USB OTG
-8. Open terminal and run command :
+8. Connect eTHR to Android with USB OTG
+9. Open terminal and run command :
    eTHR
-9. Enjoy
+10.Enjoy
 
 Note :
 “You can edit or change eTHR file for futher development.”
