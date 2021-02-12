@@ -162,7 +162,7 @@ function write_single_partition() {
 	do
 	echo "Partition selected is ::" $list1
 	if [ -e "$DIR_FILE/eTHR/Write/Partitions/$list1.img" ] ; then
-	dd if=$DIR_FILE/eTHR/Write/Partitions/$list1.img of=$TARGET_USB/by-name/$list1.img
+	dd if=$DIR_FILE/eTHR/Write/Partitions/$list1.img of=$TARGET_USB/by-name/$list1
 	sleep 8
 	else
 	echo "Error!"
@@ -249,7 +249,7 @@ menu(){
 datetime
 clear
 echo -ne "
-eTHR Direct ISP Android CLI eMMC Tool [10/02/2021]
+eTHR Direct ISP Android CLI eMMC Tool [12/02/2021]
 - Created By : Hadi Khoirudin, S. Kom
 
 * Format / Wipe Data
