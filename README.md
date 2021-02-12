@@ -35,21 +35,21 @@ chmod +x install-sudo.sh
  ./install-sudo.sh
 
 Part C Exec
-Session 1
+1. Session 1
 Commands :
 su
 eTHR
 
 Mount data with menu 2
 Mount system with menu 3 
-
 Then swipe termux screen from left to right & choose [new session]
-Session 2
+
+2. Session 2
 Commands :
 sudo su
 cd /storage && mc
 
-Please leave /storage/data & /storage/system before exit from eTHR, otherwise data & system wont umounted.
+3. Please leave /storage/data & /storage/system before exit from eTHR, otherwise data & system wont umounted.
 
 Finish...
 
