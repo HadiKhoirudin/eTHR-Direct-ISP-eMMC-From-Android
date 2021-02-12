@@ -2,7 +2,7 @@
 ##################################################################################
 #
 # eTHR ISP Android CLI Tool - Hadi Khoirudin, S. Kom.
-# Custom ROM Version 1.0 - Beta [11-02-2021]
+# Custom ROM Version 1.0 - RC [12-02-2021]
 # 
 # Silahkan edit file ini untuk disesuaikan dengan HP yang akan digunakan.
 #
@@ -44,19 +44,23 @@ fi
 DIR_DATA=/storage/data
 
 if [ -e "$DIR_DATA" ] ; then 
-chown root:media_rw $DIR_DATA
+chmod 771 $DIR_DATA
+chown system:system $DIR_DATA
 else
 mkdir $DIR_DATA
-chown root:media_rw $DIR_DATA
+chmod 771 $DIR_DATA
+chown system:system $DIR_DATA
 fi
 
 DIR_SYSTEM=/storage/system
 
 if [ -e "$DIR_SYSTEM" ] ; then 
-chown root:media_rw $DIR_SYSTEM
+chmod 771 $DIR_SYSTEM
+chown system:system $DIR_SYSTEM
 else
 mkdir $DIR_SYSTEM
-chown root:media_rw $DIR_SYSTEM
+chmod 771 $DIR_SYSTEM
+chown system:system $DIR_SYSTEM
 fi
 
 ##################################################################################
@@ -68,6 +72,7 @@ function datetime() {
 function mount_data() {
     echo "Mounting Data Partition"
     mount -t auto $TARGET_USB/by-name/userdata $DIR_DATA
+    mount -o rw,remount $DIR_DATA
     echo "Data mounted on $DIR_DATA"
     echo ""
     sleep 5
@@ -76,6 +81,7 @@ function mount_data() {
 function mount_system() {
     echo "Mounting System Partition"
     mount -t auto $TARGET_USB/by-name/system $DIR_SYSTEM
+    mount -o rw,remount $DIR_SYSTEM
     echo "System mounted on $DIR_SYSTEM"
     echo ""
     sleep 5
@@ -103,7 +109,7 @@ function format_data() {
 	else
 	auto_unmount
 	sleep 4
-	mke2fs -F $TARGET_USB/by-name/userdata
+	mke2fs -t ext4 -F $TARGET_USB/by-name/userdata
 	echo "Success!"
 	echo "Data Formated"
 	fi
@@ -135,7 +141,7 @@ function remove_frp() {
     echo "Removing FRP / Google Account"
     echo " "
     if [ -e "$TARGET_USB/by-name/frp" ] ; then
-	mke2fs -F $TARGET_USB/by-name/frp
+    mke2fs -t ext4 $TARGET_USB/by-name/frp
     echo "Success!"
     sleep 5
     else
