@@ -38,6 +38,12 @@ mkdir $DIR_FILE/eTHR/Read/Partitions
 mkdir $DIR_FILE/eTHR/Write
 mkdir $DIR_FILE/eTHR/Write/Dump
 mkdir $DIR_FILE/eTHR/Write/Partitions
+
+mkdir $DIR_FILE/eTHR/Xiaomi
+mkdir $DIR_FILE/eTHR/Xiaomi/UBL
+mkdir $DIR_FILE/eTHR/Xiaomi/UBL_backup
+mkdir $DIR_FILE/eTHR/Pinout
+
 fi
 
 # Set default mount location for data & system
@@ -216,16 +222,16 @@ function ubl_xiaomi() {
 	echo "Instan UBL Xiaomi"
     echo "Select Xiaomi CodeName / Product :"
 	
-	select list3 in $(ls $DIR_FILE/eTHR/Data/Xiaomi/UBL)
+	select list3 in $(ls $DIR_FILE/eTHR/Xiaomi/UBL)
 	do
 	echo "Device selected is ::" $list3
-	if [ -e "$DIR_FILE/eTHR/Data/Xiaomi/UBL/$list3.img" ] ; then
+	if [ -e "$DIR_FILE/eTHR/Xiaomi/UBL/$list3" ] ; then
 	
-	mkdir $DIR_FILE/eTHR/Data/Xiaomi/UBL_backup/$NOW
-	dd if=$TARGET_USB/by-name/devinfo of=$DIR_FILE/eTHR/Data/Xiaomi/UBL_backup/$NOW/$list3.img
-	sleep 4
+	mkdir $DIR_FILE/eTHR/Xiaomi/UBL_backup/$NOW
+	dd if=$TARGET_USB/by-name/devinfo of=$DIR_FILE/eTHR/Xiaomi/UBL_backup/$NOW/$list3
+	sleep 3
 	
-	dd if=$DIR_FILE/eTHR/Data/Xiaomi/UBL/$list3 of=$TARGET_USB/by-name/devinfo
+	dd if=$DIR_FILE/eTHR/Xiaomi/UBL/$list3 of=$TARGET_USB/by-name/devinfo
 	sleep 8
 	else
 	echo "Error!"
@@ -242,9 +248,9 @@ function pinout_direct_isp() {
 
     echo "Select Device:"
 	
-	select list4 in $(ls $DIR_FILE/eTHR/Data/Pinout)
+	select list4 in $(ls $DIR_FILE/eTHR/Pinout)
 	do
-	termux-open --chooser $DIR_FILE/eTHR/Data/Pinout/$list4
+	termux-open --chooser $DIR_FILE/eTHR/Pinout/$list4
 	sleep 8
 	break
 	done
