@@ -2,7 +2,7 @@
 ##################################################################################
 #
 # eTHR ISP Android CLI Tool - Hadi Khoirudin, S. Kom.
-# Custom ROM Version 1.0 - RC [12-02-2021]
+# Custom ROM Version 1.2 - RC [12-02-2021]
 # 
 # Silahkan edit file ini untuk disesuaikan dengan HP yang akan digunakan.
 #
@@ -17,7 +17,7 @@
 #
 # 2. Ubah TARGET_USB ini dengan target yang telah disesuaikan seperti di atas :
 #
-TARGET_USB=/dev/block/platform/soc/78db000.usb/msm_hsusb_host
+TARGET_USB=/dev/block/platform/soc/7000000.ssusb/7000000.dwc3/xhci-hcd.0.auto
 #
 #
 #
@@ -211,6 +211,47 @@ function read_dump() {
 	sleep 10
 }
 
+function ubl_xiaomi() {
+	echo ""
+	echo "Instan UBL Xiaomi"
+    echo "Select Xiaomi CodeName / Product :"
+	
+	select list3 in $(ls $DIR_FILE/eTHR/Data/Xiaomi/UBL)
+	do
+	echo "Device selected is ::" $list3
+	if [ -e "$DIR_FILE/eTHR/Data/Xiaomi/UBL/$list3.img" ] ; then
+	
+	mkdir $DIR_FILE/eTHR/Data/Xiaomi/UBL_backup/$NOW
+	dd if=$TARGET_USB/by-name/devinfo of=$DIR_FILE/eTHR/Data/Xiaomi/UBL_backup/$NOW/$list3.img
+	sleep 4
+	
+	dd if=$DIR_FILE/eTHR/Data/Xiaomi/UBL/$list3 of=$TARGET_USB/by-name/devinfo
+	sleep 8
+	else
+	echo "Error!"
+	sleep 8
+	fi
+	break
+	done
+
+	echo ""
+}
+
+function pinout_direct_isp() {
+	echo ""
+
+    echo "Select Device:"
+	
+	select list4 in $(ls $DIR_FILE/eTHR/Data/Pinout)
+	do
+	termux-open --chooser $DIR_FILE/eTHR/Data/Pinout/$list4
+	sleep 8
+	break
+	done
+
+	echo ""
+}
+
 function auto_unmount() {
 if grep -qs $DIR_DATA /proc/mounts; then 
 umount_data
@@ -226,7 +267,7 @@ function WrongCommand() {
 sleep 2
 menu
 }
-##################################################################################
+############################################################# #####################
 ##
 # Color  Variables
 ##
@@ -249,48 +290,54 @@ menu(){
 datetime
 clear
 echo -ne "
-eTHR Direct ISP Android CLI eMMC Tool [12/02/2021]
+eTHR Direct ISP Android CLI eMMC Tool [18/09/2021]
 - Created By : Hadi Khoirudin, S. Kom
 
 * Format / Wipe Data
-* Mount Unencrypted Partition
-* Only Remove PIN / Gesture Lockscreen
-* Only Remove FRP / Google Account
+* Remove PIN / Gesture Lockscreen
+* Remove FRP / Google Account
+* Mount Partition System / Userdata
 * Write & Read Single Partition
 * Write & Read Dump eMMC / eMCP
+* Instan UBL Xiaomi
+* Pinout Direct ISP
 "
 
 if [ -e "$TARGET_USB/sda" ] ; then
 echo -ne "
 Main Menu : 
 $(ColorGreen '1)') Format / Wipe Data
-$(ColorGreen '2)') Mount Data
-$(ColorGreen '3)') Mount System
-$(ColorGreen '4)') Remove PIN / Gesture Lockscreen
-$(ColorGreen '5)') Remove FRP / Google Account
+$(ColorGreen '2)') Remove PIN / Gesture Lockscreen
+$(ColorGreen '3)') Remove FRP / Google Account
+$(ColorGreen '4)') Mount System
+$(ColorGreen '5)') Mount Data
 $(ColorGreen '6)') Write Single Partition
 $(ColorGreen '7)') Read Single Partition
 $(ColorGreen '8)') Write Dump User Area
 $(ColorGreen '9)') Read Dump User Area
+$(ColorGreen '10)') Instan UBL Xiaomi
+$(ColorGreen '11)') Pinout Direct ISP
 $(ColorGreen '0)') Exit
 $(ColorBlue 'Choose an option:') "
         read a
         case $a in
 	        1) format_data ; menu ;;
-	        2) mount_data ; menu ;;
-	        3) mount_system ; menu ;;
-	        4) remove_pin_gesture_lock ; menu ;;
-	        5) remove_frp ; menu ;;
+	        2) remove_pin_gesture_lock ; menu ;;
+	        3) remove_frp ; menu ;;
+	        4) mount_system ; menu ;;
+	        5) mount_data ; menu ;;
 	        6) write_single_partition ; menu ;;
 	        7) read_single_partition ; menu ;;
 	        8) write_dump ; menu ;;
 	        9) read_dump ; menu ;;
+	        10) ubl_xiaomi ; menu ;;
+	        11) pinout_direct_isp ; menu ;;
 		0) auto_unmount ; exit 0 ;;
 		*) echo -e $red"Wrong option."$clear; WrongCommand;;
         esac
 else
 echo -ne "
-Error : eMMC null / not detected!
+Error : eTHR not detected!
 Check USB OTG & eTHR connection then try again... 
 
 "
