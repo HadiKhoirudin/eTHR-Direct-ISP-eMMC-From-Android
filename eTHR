@@ -82,7 +82,11 @@ else
     echo " "
     echo -e $red " Error! Partition Userdata not found."
     echo "  Please check Direct ISP connection."$clear
-    sleep 5
+    
+    echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
     SomethingWrong
 fi
 }
@@ -96,7 +100,11 @@ else
     echo " "
     echo -e $red " Error! Partition System not found." 
     echo " Please check Direct ISP connection..."$clear
-    sleep 5
+    
+    echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
     SomethingWrong
 fi
 }
@@ -105,14 +113,22 @@ function identify_device() {
     echo "Reading information from device..."
 
 if [ -e "$DIR_SYSTEM/build.prop" ] ; then
-grep -i ro.product $DIR_SYSTEM/build.prop
-sleep 8
+    grep -i ro.product $DIR_SYSTEM/build.prop
+    
+    echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+
     
     else
     mount_system
     if grep -qs $DIR_SYSTEM /proc/mounts; then
     grep -i ro.product $DIR_SYSTEM/build.prop
-    sleep 8
+    
+    echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+
     umount_system
     fi
 fi
@@ -145,7 +161,7 @@ function umount_system() {
 }
 
 function format_data() {
-    echo "Formatting Data"
+    echo "Formating / Wiping Data"
 	mount_userdata
 	sleep 4
 	if [ -e "$DIR_DATA/app" ] ; then
@@ -157,11 +173,14 @@ function format_data() {
 	umount_userdata
 	fi
 	sleep 4
-	mke2fs -t ext4 -F $TARGET_USB/by-name/userdata
+	echo "Formating Data Partition..."
+	/system/bin/mke2fs -t ext4 -F $TARGET_USB/by-name/userdata
+	echo ""
 	echo "Success! Data Formated."
 	fi
 	echo ""
-	sleep 8
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
 }
 
 function remove_pin_gesture_lock() {
@@ -175,28 +194,38 @@ function remove_pin_gesture_lock() {
 	rm *.key
 	cd /
 	echo "PIN Gesture Lock Removed"
-	echo ""
 	umount_userdata
-	sleep 5
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
 	else
-	echo -e $red "Error! Partition Data Encrypted."$clear
+	     echo -e $red "Error! Partition Data Encrypted."
+	     echo - e $red" Please Format / Wipe Data."$clear
         echo -e $red "Operation Aborted..."$clear
   fi
 	echo ""
-	sleep 5
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
 }
 
 function remove_frp() {
     echo "Removing FRP / Google Account"
     echo " "
     if [ -e "$TARGET_USB/by-name/frp" ] ; then
-    mke2fs -t ext4 $TARGET_USB/by-name/frp
+    /system/bin/mke2fs -t ext4 $TARGET_USB/by-name/frp
     echo "Success!"
-    sleep 5
+    
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
     else
     echo -e $red "Error! This Device Has No FRP Partition."$clear
     echo -e $red "Operation Aborted..."$clear
-    sleep 5
+    
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
     fi
 	echo ""
 }
@@ -211,11 +240,19 @@ function write_single_partition() {
 	echo "Partition selected is ::" $list1
 	if [ -e "$DIR_FILE/eTHR/Partitions/Write/$list1.img" ] ; then
 	dd if=$DIR_FILE/eTHR/Partitions/Write/$list1.img of=$TARGET_USB/by-name/$list1
-	sleep 8
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
 	else
 	echo -e $red "Error! Can't write partition."
 	echo "Missing ::" $clear $DIR_FILE/eTHR/Partitions/Write/$list1.img
-	sleep 8
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
 	fi
 	break
 	done
@@ -233,7 +270,11 @@ function read_single_partition() {
 	echo "Partition selected is ::" $list2
 	mkdir $DIR_FILE/eTHR/Partitions/$list2-$NOW
 	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Partitions/$list2-$NOW/$list2.img
-	sleep 8
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
 	break
 	done
 
@@ -256,7 +297,10 @@ function write_dump() {
 	echo -e $red "Error! Missing userarea.bin file."$clear
 	fi
 	
-	sleep 10
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
 	break
 	done
 }
@@ -271,8 +315,10 @@ function read_dump() {
 	dd if=$TARGET_USB/sda of=$DIR_FILE/eTHR/Dump/$rdmp-$NOW/userarea.bin
 	echo "Success!"
 	echo "Saved to $DIR_FILE/eTHR/Dump/$rdmp-$NOW..."
+	
 	echo ""
-	sleep 10
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
 }
 
 function ubl_xiaomi() {
@@ -290,10 +336,18 @@ function ubl_xiaomi() {
 	sleep 3
 	
 	dd if=$DIR_FILE/eTHR/Xiaomi/UBL/$list3/devinfo.img of=$TARGET_USB/by-name/devinfo
-	sleep 8
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
 	else
 	echo -e $red "Error! Can't write devinfo."$clear
-	sleep 8
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
 	fi
 	break
 	done
@@ -309,7 +363,7 @@ function pinout_direct_isp() {
 	select list4 in $(ls $DIR_FILE/eTHR/Pinout)
 	do
 	termux-open --chooser $DIR_FILE/eTHR/Pinout/$list4
-	sleep 8
+	sleep 4
 	break
 	done
 
