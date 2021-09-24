@@ -356,8 +356,8 @@ echo -ne "
  Created By : Hadi Khoirudin, S. Kom. [24/09/2021]
 "
 
-#if [ -e "$TARGET_USB/sda" ] ; then
-if [ -e "/sbin" ] ; then
+if [ -e "$TARGET_USB/sda" ] ; then
+
 echo -ne "
 Main Menu : 
 $(ColorGreen '1)')  Identify Device
