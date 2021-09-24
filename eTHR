@@ -33,13 +33,12 @@ mkdir $DIR_FILE/eTHR/Dump
 mkdir $DIR_FILE/eTHR/Partitions
 mkdir $DIR_FILE/eTHR/Partitions/Write
 
+mkdir $DIR_FILE/eTHR/Pinout
+
 mkdir $DIR_FILE/eTHR/Xiaomi
 mkdir $DIR_FILE/eTHR/Xiaomi/UBL
 mkdir $DIR_FILE/eTHR/Xiaomi/UBL_backup
-mkdir $DIR_FILE/eTHR/Pinout
-
 fi
-
 
 # Set default mount location for data & system
 DIR_DATA=/storage/eTHR/data
@@ -102,7 +101,6 @@ else
 fi
 }
 
-
 function identify_device() {
     echo "Reading information from device..."
 
@@ -121,6 +119,7 @@ fi
 }
 
 function mount_explore_userdata() {
+    echo "Explore Userdata..."
     mount_userdata
     if grep -qs $DIR_DATA /proc/mounts; then
     cd /storage/eTHR/ && mc
@@ -128,6 +127,7 @@ function mount_explore_userdata() {
 }
 
 function mount_explore_system() {
+     echo "Explore System..."
      mount_system
      if grep -qs $DIR_SYSTEM /proc/mounts; then
      cd /storage/eTHR/ && mc
@@ -202,8 +202,8 @@ function remove_frp() {
 }
 
 function write_single_partition() {
+   echo "Write Single Partition to eMMC"
 	echo ""
-	echo "Write Single Partition to eMMC"
    echo "Select Partition :"
 	
 	select list1 in $(ls $TARGET_USB/by-name)
@@ -224,8 +224,8 @@ function write_single_partition() {
 }
 
 function read_single_partition() {
+   echo "Read Single Partition from eMMC"
 	echo ""
-	echo "Read Single Partition from eMMC"
     echo "Select Partition :"
 	
 	select list2 in $(ls $TARGET_USB/by-name)
@@ -241,6 +241,9 @@ function read_single_partition() {
 }
 
 function write_dump() {
+   echo "Write Dump Userarea to eMMC..."
+   echo ""
+   
 	select list5 in $(ls $DIR_FILE/eTHR/Dump)
 	do
 	
@@ -273,8 +276,8 @@ function read_dump() {
 }
 
 function ubl_xiaomi() {
-	echo ""
 	echo "Instan UBL Xiaomi"
+	echo ""
     echo "Select Xiaomi CodeName / Product :"
 	
 	select list3 in $(ls $DIR_FILE/eTHR/Xiaomi/UBL)
@@ -282,11 +285,11 @@ function ubl_xiaomi() {
 	echo "Device selected is ::" $list3
 	if [ -e "$DIR_FILE/eTHR/Xiaomi/UBL/$list3" ] ; then
 	
-	mkdir $DIR_FILE/eTHR/Xiaomi/UBL_backup/$NOW
+	mkdir $DIR_FILE/eTHR/Xiaomi/UBL_backup/$list3-$NOW
 	dd if=$TARGET_USB/by-name/devinfo of=$DIR_FILE/eTHR/Xiaomi/UBL_backup/$NOW/$list3
 	sleep 3
 	
-	dd if=$DIR_FILE/eTHR/Xiaomi/UBL/$list3.img of=$TARGET_USB/by-name/devinfo
+	dd if=$DIR_FILE/eTHR/Xiaomi/UBL/$list3/devinfo.img of=$TARGET_USB/by-name/devinfo
 	sleep 8
 	else
 	echo -e $red "Error! Can't write devinfo."$clear
@@ -352,11 +355,11 @@ menu(){
 datetime
 clear
 echo -ne "
-  [eTHR - Direct ISP Android CLI eMMC Tool V1.4] 
- Created By : Hadi Khoirudin, S. Kom. [24/09/2021]
-"
+  [eTHR - Direct ISP Android CLI eMMC Tool V1.4]  " 
+echo -ne $green "Created By : Hadi Khoirudin, S. Kom. [24/09/2021]" $clear
 
 if [ -e "$TARGET_USB/sda" ] ; then
+#if [ -e "/sbin" ] ; then
 echo -ne "
 Main Menu : 
 $(ColorGreen '1)')  Identify Device
