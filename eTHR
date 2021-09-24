@@ -286,7 +286,7 @@ function ubl_xiaomi() {
 	dd if=$TARGET_USB/by-name/devinfo of=$DIR_FILE/eTHR/Xiaomi/UBL_backup/$NOW/$list3
 	sleep 3
 	
-	dd if=$DIR_FILE/eTHR/Xiaomi/UBL/$list3 of=$TARGET_USB/by-name/devinfo
+	dd if=$DIR_FILE/eTHR/Xiaomi/UBL/$list3.img of=$TARGET_USB/by-name/devinfo
 	sleep 8
 	else
 	echo -e $red "Error! Can't write devinfo."$clear
@@ -357,7 +357,6 @@ echo -ne "
 "
 
 if [ -e "$TARGET_USB/sda" ] ; then
-
 echo -ne "
 Main Menu : 
 $(ColorGreen '1)')  Identify Device
