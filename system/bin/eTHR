@@ -1,0 +1,596 @@
+#!/system/bin/sh
+##################################################
+#
+# eTHR ISP Android CLI Tool - Hadi Khoirudin, S. Kom.
+# For Rooted Android Devices Version 1.6 - RC [26-09-2021]
+# 
+# Silahkan edit file ini untuk disesuaikan dengan HP yang akan digunakan.
+#
+# 1. Sambungkan eTHR melalui USB OTGnya
+# *Untuk mengetahui TARGET_USB silahkan : 
+# *Gunakan aplikasi Root Explorer
+# *Buka file yang bernama fstab
+# *Misal : fstab.qcom fstab.sc8920 dll
+# *Temukan baris usb
+# *Misal : /dev/block/platform/soc/7000000.ssusb/7000000.dwc3/xhci-hcd.0.auto*
+# *Kemudian ubah menjadi : /dev/block/platform/soc/7000000.ssusb/7000000.dwc3/xhci-hcd.0.auto
+#
+# 2. Ubah TARGET_USB ini dengan target yang telah disesuaikan seperti di atas :
+#
+TARGET_USB=/dev/block/platform/soc/7000000.ssusb/7000000.dwc3/xhci-hcd.0.auto
+#
+#
+#
+# Set default sdcard location for read & save file
+DIR_FILE=/sdcard
+
+if [ -e "$DIR_FILE/eTHR" ] ; then 
+OK=true
+else
+mkdir $DIR_FILE/eTHR
+mkdir $DIR_FILE/eTHR/Dump
+
+mkdir $DIR_FILE/eTHR/Partitions
+mkdir $DIR_FILE/eTHR/Partitions/Write
+
+mkdir $DIR_FILE/eTHR/Pinout
+
+mkdir $DIR_FILE/eTHR/Xiaomi
+mkdir $DIR_FILE/eTHR/Xiaomi/UBL
+mkdir $DIR_FILE/eTHR/Xiaomi/UBL_backup
+fi
+
+# Set default mount location for data & system
+DIR_DATA=/storage/eTHR/data
+
+if [ -e "$DIR_DATA" ] ; then 
+chmod 771 $DIR_DATA
+chown system:system $DIR_DATA
+else
+mkdir /storage/eTHR
+chmod 771 /storage/eTHR
+chown system:system /storage/eTHR
+
+mkdir $DIR_DATA
+chmod 771 $DIR_DATA
+chown system:system $DIR_DATA
+fi
+
+DIR_SYSTEM=/storage/eTHR/system
+
+if [ -e "$DIR_SYSTEM" ] ; then 
+chmod 771 $DIR_SYSTEM
+chown system:system $DIR_SYSTEM
+else
+mkdir $DIR_SYSTEM
+chmod 771 $DIR_SYSTEM
+chown system:system $DIR_SYSTEM
+fi
+
+##################################################
+
+function datetime() {
+	NOW=$(date +"%d-%m-%Y_%H:%M")
+}
+
+function mount_userdata() {
+if [ -e "$TARGET_USB/by-name/userdata" ] ; then
+    echo "Mounting Data Partition"
+    mount -t auto $TARGET_USB/by-name/userdata $DIR_DATA
+    mount -o rw,remount $DIR_DATA
+else
+    echo " "
+    echo -e $red " Error! Partition Userdata not found."
+    echo "  Please check Direct ISP connection."$clear
+    
+    echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
+    SomethingWrong
+fi
+}
+
+function mount_system() {
+if [ -e "$TARGET_USB/by-name/system" ] ; then
+    echo "Mounting System Partition"
+    mount -t auto $TARGET_USB/by-name/system $DIR_SYSTEM
+    mount -o rw,remount $DIR_SYSTEM
+else
+    echo " "
+    echo -e $red " Error! Partition System not found." 
+    echo " Please check Direct ISP connection..."$clear
+    
+    echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
+    SomethingWrong
+fi
+}
+
+function identify_device() {
+    echo "Reading information from device..."
+
+    mount_system
+    if grep -qs $DIR_SYSTEM /proc/mounts; then
+    echo ""
+        dbrand=$(grep -i ro.product.brand= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+        echo "Device Brand : " $dbrand
+        
+    dmodel=$(grep -i ro.product.model= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    
+    dname=$(grep -i ro.product.device= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    
+    if [ "$dmodel == $dname" ]; then
+    echo "Device Model : " $dmodel
+    else
+    echo "Device Model : " $dmodel
+    echo "Device Name : " $dname
+    fi
+    
+    dsoftware=$(grep -i ro.build.fingerprint= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    echo "Device Software : " $dsoftware
+    
+    echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+
+    umount_system
+    fi
+}
+
+function mount_explore_system_userdata() {
+    echo "Explore System & Userdata..."
+    mount_userdata
+    mount_system
+    cd /storage/eTHR/ && mc
+    echo ""
+    echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    umount_userdata
+    umount_system
+}
+
+function umount_userdata() {
+    echo "  Umount Data Partition"
+	umount $DIR_DATA
+}
+
+function umount_system() {
+    echo "  Umount System Partition"
+	umount $DIR_SYSTEM
+}
+
+function format_data() {
+    echo "Formating / Wiping Data"
+	mount_userdata
+	sleep 4
+	if [ -e "$DIR_DATA/app" ] ; then
+	rm -rf $DIR_DATA/*
+	mkdir $DIR_DATA/app
+	echo "Success! Data Wiped."
+	else
+	if grep -qs $DIR_DATA /proc/mounts; then
+	umount_userdata
+	fi
+	sleep 4
+	echo "Formating Data Partition..."
+	/system/bin/mke2fs -t ext4 -F $TARGET_USB/by-name/userdata
+	echo ""
+	echo "Success! Data Formated."
+	fi
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+}
+
+function remove_pin_gesture_lock() {
+   echo "Removing PIN Gesture Lockscreen"
+   
+	mount_userdata
+	
+  if [ -e "$DIR_DATA/system" ] ; then
+	sleep 1
+	cd $DIR_DATA/system
+	rm *.key
+	cd /
+	echo "PIN Gesture Lock Removed"
+	umount_userdata
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+	else
+	     echo -e $red "Error! Partition Data Encrypted."
+	     echo - e $red" Please Format / Wipe Data."$clear
+        echo -e $red "Operation Aborted..."$clear
+  fi
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+}
+
+function remove_frp() {
+    echo "Removing FRP / Google Account"
+    echo " "
+    mount_system
+    echo " "
+    
+    dbrand=$(grep -i ro.product.brand= -a /system/build.prop | cut -d '=' -f 2)
+    dmodel=$(grep -i ro.product.model= -a /system/build.prop | cut -d '=' -f 2)
+    dname=$(grep -i ro.product.device= -a /system/build.prop | cut -d '=' -f 2)
+    
+    if [ "$dmodel == $dname" ]; then
+    dinfo=$dmodel
+    else 
+    dinfo=$dmodel_$dname
+    fi
+    
+    echo "Backing-up Necessary Partition Before Remove FRP..."
+    echo " "
+    
+    sleep 3
+    
+    mkdir $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW
+    
+    if [ -e "$TARGET_USB/by-name/frp" ] ; then
+    
+    dd if=$TARGET_USB/by-name/frp of=$DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/frp.img status=progress
+    
+    cntfrp=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/frp.img | cut -d '/ /' -f 1)
+    
+    echo " " 
+    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW $clear
+    
+    sleep 5
+    
+    echo " " 
+    echo " Removing FRP / Google Account...." 
+    
+    dd if=/dev/zero of=$TARGET_USB/by-name/frp bs=512 count=$cntfrp status=progress
+    
+    echo ""
+    echo "Success!"
+    
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+	read pause
+    umount_system
+    
+    elif [ -e "$TARGET_USB/by-name/persist" ] ; then
+    
+    dd if=$TARGET_USB/by-name/persist of=$DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persist.img status=progress
+    
+    cntpersist=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persist.img | cut -d '/ /' -f 1)
+    
+    echo " " 
+    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW $clear
+    
+    sleep 5
+    
+    echo " " 
+    echo " Removing FRP / Google Account...." 
+    
+    dd if=/dev/zero of=$TARGET_USB/by-name/persist bs=512 count=$cntpersist status=progress
+    
+    echo ""
+    echo "Success!"
+    
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+	read pause
+    umount_system
+    
+    else
+    echo -e $red "Error! This Device Has No FRP Partition."$clear
+    echo -e $red "Operation Aborted..."$clear
+    
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    fi
+	echo ""
+}
+
+function remove_micloud() {
+    echo "Removing Xiaomi MiCloud Account"
+    echo " "
+    mount_system
+    echo " "
+    dbrand=$(grep -i ro.product.brand= -a /system/build.prop | cut -d '=' -f 2)
+    dmodel=$(grep -i ro.product.model= -a /system/build.prop | cut -d '=' -f 2)
+    dname=$(grep -i ro.product.device= -a /system/build.prop | cut -d '=' -f 2)
+    
+    
+    if [ "$dmodel == $dname" ]; then
+    dinfo=$dmodel
+    else 
+    dinfo=$dmodel_$dname
+    fi
+    
+    
+    echo "Backing-up Necessary Partition Before Unlock MiCloud..."
+    echo " "
+    
+    sleep 3
+    
+    mkdir $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW
+    
+    dd if=$TARGET_USB/by-name/persist of=$DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persist.img status=progress
+    
+    cntpersist=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persist.img | cut -d '/ /' -f 1)
+    
+    dd if=$TARGET_USB/by-name/persistbak of=$DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persistback.img status=progress
+    
+    cntpersistbak=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persistback.img | cut -d '/ /' -f 1)
+    
+    echo " " 
+    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW $clear
+    
+    sleep 5
+    
+    echo " " 
+    echo " Unlocking MiCloud...." 
+    dd if=/dev/zero of=$TARGET_USB/by-name/persist bs=512 count=$cntpersist status=progress
+    
+    dd if=/dev/zero of=$TARGET_USB/by-name/persistbak bs=512 count=$cntpersistbak status=progress
+    
+    echo " " 
+    echo "Success!"
+    
+    echo " If device can't start / bootloop just write saved files above." 
+    
+    
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
+	echo ""
+	umount_system
+}
+
+function write_single_partition() {
+   echo "Write Single Partition to eMMC"
+	echo ""
+   echo "Select Partition :"
+	
+	select list1 in $(ls $TARGET_USB/by-name)
+	do
+	echo "Partition selected is ::" $list1
+	if [ -e "$DIR_FILE/eTHR/Partitions/Write/$list1.img" ] ; then
+	dd if=$DIR_FILE/eTHR/Partitions/Write/$list1.img of=$TARGET_USB/by-name/$list1 status=progress
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
+	else
+	echo -e $red "Error! Can't write partition."
+	echo "Missing ::" $clear $DIR_FILE/eTHR/Partitions/Write/$list1.img
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
+	fi
+	break
+	done
+
+	echo ""
+}
+
+function read_single_partition() {
+   echo "Read Single Partition from eMMC"
+	echo ""
+    echo "Select Partition :"
+	
+	select list2 in $(ls $TARGET_USB/by-name)
+	do
+	echo "Partition selected is ::" $list2
+	mkdir $DIR_FILE/eTHR/Partitions/$list2-$NOW
+	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Partitions/$list2-$NOW/$list2.img status=progress
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
+	break
+	done
+
+	echo ""
+}
+
+function write_dump() {
+   echo "Write Dump Userarea to eMMC..."
+   echo ""
+   
+	select list5 in $(ls $DIR_FILE/eTHR/Dump)
+	do
+	
+	if [ -e "$DIR_FILE/eTHR/Dump/$list5/userarea.bin" ] ; then
+	echo "Write Userarea Dump file to eMMC..."
+	dd if=$DIR_FILE/eTHR/Dump/$list5/userarea.bin of=$TARGET_USB/sda status=progress
+	echo " "
+	echo "Success! Userarea Dump Writed to eMMC..."
+	else
+	echo -e $red "Error! Missing userarea.bin file."$clear
+	fi
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
+	break
+	done
+}
+
+function read_dump() {
+   echo "Read & Saving Dump eMMC"
+   echo " "
+   echo "Please input name for saving Dump file : "
+   read rdmp
+   
+	mkdir $DIR_FILE/eTHR/Dump/$rdmp-$NOW
+	dd if=$TARGET_USB/sda of=$DIR_FILE/eTHR/Dump/$rdmp-$NOW/userarea.bin status=progress
+	echo "Success!"
+	echo "Saved to $DIR_FILE/eTHR/Dump/$rdmp-$NOW..."
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+}
+
+function ubl_xiaomi() {
+	echo "Instan UBL Xiaomi"
+	echo ""
+    echo "Select Xiaomi CodeName / Product :"
+	
+	select list3 in $(ls $DIR_FILE/eTHR/Xiaomi/UBL)
+	do
+	echo "Device selected is ::" $list3
+	if [ -e "$DIR_FILE/eTHR/Xiaomi/UBL/$list3" ] ; then
+	
+	mkdir $DIR_FILE/eTHR/Xiaomi/UBL_backup/$list3-$NOW
+	dd if=$TARGET_USB/by-name/devinfo of=$DIR_FILE/eTHR/Xiaomi/UBL_backup/$NOW/$list3 status=progress
+	sleep 3
+	
+	dd if=$DIR_FILE/eTHR/Xiaomi/UBL/$list3/devinfo.img of=$TARGET_USB/by-name/devinfo status=progress
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
+	else
+	echo -e $red "Error! Can't write devinfo."$clear
+	
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
+	fi
+	break
+	done
+
+	echo ""
+}
+
+function pinout_direct_isp() {
+	echo ""
+
+    echo "Select Device:"
+	
+	select list4 in $(ls $DIR_FILE/eTHR/Pinout)
+	do
+	termux-open --chooser $DIR_FILE/eTHR/Pinout/$list4
+	sleep 4
+	break
+	done
+
+	echo ""
+}
+
+function auto_unmount() {
+if grep -qs $DIR_DATA /proc/mounts; then 
+umount_userdata
+fi
+
+if grep -qs $DIR_SYSTEM /proc/mounts; then 
+umount_system
+fi
+clear
+}
+
+function SomethingWrong() {
+sleep 2
+menu
+}
+##################################################
+##
+# Color  Variables
+##
+red='\e[31m'
+green='\e[32m'
+blue='\e[34m'
+clear='\e[0m'
+
+##
+# Color Functions
+##
+
+ColorGreen(){
+	echo -ne $green$1$clear
+}
+ColorBlue(){
+	echo -ne $blue$1$clear
+}
+
+menu(){
+datetime
+clear
+echo -ne "
+   [ eTHR - Direct ISP Android CLI eMMC Tool V1.6 - RC ]     " 
+echo -ne $green "  Created By : Hadi Khoirudin, S. Kom. [26/09/2021]   " $clear
+
+if [ -e "$TARGET_USB/sda" ] ; then
+#if [ -e "/sbin" ] ; then
+echo -ne "
+
+  Main Menu : 
+$(ColorGreen '   1)')  Identify Device
+$(ColorGreen '   2)')  Format / Wipe Data
+$(ColorGreen '   3)')  Remove PIN / Gesture Lockscreen
+$(ColorGreen '   4)')  Remove FRP / Google Account
+$(ColorGreen '   5)')  Remove MiCloud / Xiaomi Account
+$(ColorGreen '   6)')  Mount Explore System & Userdata Files
+$(ColorGreen '   7)')  Write Single Partition
+$(ColorGreen '   8)')  Read Single Partition
+$(ColorGreen '   9)')  Write Dump Userarea
+$(ColorGreen '   10)') Read Dump Userarea
+$(ColorGreen '   11)') Instant UBL Xiaomi
+$(ColorGreen '   12)') Pinout Direct ISP
+$(ColorGreen '    0)')  Exit
+
+$(ColorBlue '  Select Menu    :') "
+        read a
+        case $a in
+	        1) identify_device; menu ;;
+	        2) format_data ; menu ;;
+	        3) remove_pin_gesture_lock ; menu ;;
+	        4) remove_frp ; menu ;;
+	        5) remove_micloud ; menu ;;
+	        6) mount_explore_system_userdata ; menu ;;
+	        7) write_single_partition ; menu ;;
+	        8) read_single_partition ; menu ;;
+	        9) write_dump ; menu ;;
+	        10) read_dump ; menu ;;
+	        11) ubl_xiaomi ; menu ;;
+	        12) pinout_direct_isp ; menu ;;
+		0) auto_unmount ; exit 0 ;;
+		*) echo " " ; echo -e $red"   Wrong input."$clear; SomethingWrong;;
+        esac
+else
+echo -ne $blue" 
+* Identify Device
+* Format / Wipe Data
+* Remove PIN / Gesture Lockscreen
+* Remove FRP / Google Account
+* Remove MiCloud / Xiaomi Account
+* Mount & Explore Partition System / Userdata
+* Write & Read Single Partition
+* Write & Read Dump Userarea
+* Instant UBL Xiaomi
+* Pinout Direct ISP
+"
+
+echo -ne $red"
+Error : eTHR not detected!
+Check USB OTG & eTHR connection then try again... 
+
+"$clear
+
+sleep 5
+fi
+}
+
+# Call the menu function
+menu
