@@ -31,11 +31,13 @@ mkdir $DIR_FILE/eTHR
 mkdir $DIR_FILE/eTHR/Dump
 
 mkdir $DIR_FILE/eTHR/Partitions
+mkdir $DIR_FILE/eTHR/Partitions/FRP_backup
 mkdir $DIR_FILE/eTHR/Partitions/Write
 
 mkdir $DIR_FILE/eTHR/Pinout
 
 mkdir $DIR_FILE/eTHR/Xiaomi
+mkdir $DIR_FILE/eTHR/Xiaomi/MiCloud_backup
 mkdir $DIR_FILE/eTHR/Xiaomi/UBL
 mkdir $DIR_FILE/eTHR/Xiaomi/UBL_backup
 fi
@@ -216,9 +218,9 @@ function remove_frp() {
     mount_system
     echo " "
     
-    dbrand=$(grep -i ro.product.brand= -a /system/build.prop | cut -d '=' -f 2)
-    dmodel=$(grep -i ro.product.model= -a /system/build.prop | cut -d '=' -f 2)
-    dname=$(grep -i ro.product.device= -a /system/build.prop | cut -d '=' -f 2)
+    dbrand=$(grep -i ro.product.brand= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    dmodel=$(grep -i ro.product.model= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    dname=$(grep -i ro.product.device= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
     
     if [ "$dmodel == $dname" ]; then
     dinfo=$dmodel
@@ -226,14 +228,13 @@ function remove_frp() {
     dinfo=$dmodel_$dname
     fi
     
+    mkdir $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW
+    
+    if [ -e "$TARGET_USB/by-name/frp" ] ; then
     echo "Backing-up Necessary Partition Before Remove FRP..."
     echo " "
     
     sleep 3
-    
-    mkdir $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW
-    
-    if [ -e "$TARGET_USB/by-name/frp" ] ; then
     
     dd if=$TARGET_USB/by-name/frp of=$DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/frp.img status=progress
     
@@ -258,6 +259,10 @@ function remove_frp() {
     umount_system
     
     elif [ -e "$TARGET_USB/by-name/persist" ] ; then
+    echo "Backing-up Necessary Partition Before Remove FRP..."
+    echo " "
+    
+    sleep 3
     
     dd if=$TARGET_USB/by-name/persist of=$DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persist.img status=progress
     
@@ -295,11 +300,15 @@ function remove_frp() {
 function remove_micloud() {
     echo "Removing Xiaomi MiCloud Account"
     echo " "
+    
+    
+    if [ -e "$TARGET_USB/by-name/persist" ] ; then
+    
     mount_system
     echo " "
-    dbrand=$(grep -i ro.product.brand= -a /system/build.prop | cut -d '=' -f 2)
-    dmodel=$(grep -i ro.product.model= -a /system/build.prop | cut -d '=' -f 2)
-    dname=$(grep -i ro.product.device= -a /system/build.prop | cut -d '=' -f 2)
+    dbrand=$(grep -i ro.product.brand= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    dmodel=$(grep -i ro.product.model= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    dname=$(grep -i ro.product.device= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
     
     
     if [ "$dmodel == $dname" ]; then
@@ -347,6 +356,16 @@ function remove_micloud() {
     
 	echo ""
 	umount_system
+	else
+	 echo -e $red "Error! This Device Has No MiCloud Partition."$clear
+    echo -e $red "Operation Aborted..."$clear
+    
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    fi
+	echo ""
+	
 }
 
 function write_single_partition() {
@@ -382,13 +401,27 @@ function write_single_partition() {
 function read_single_partition() {
    echo "Read Single Partition from eMMC"
 	echo ""
+	mount_system
+    echo " "
+    
+    dbrand=$(grep -i ro.product.brand= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    dmodel=$(grep -i ro.product.model= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    dname=$(grep -i ro.product.device= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    
+    if [ "$dmodel == $dname" ]; then
+    dinfo=$dmodel
+    else 
+    dinfo=$dmodel_$dname
+    fi
+    
     echo "Select Partition :"
 	
 	select list2 in $(ls $TARGET_USB/by-name)
 	do
 	echo "Partition selected is ::" $list2
-	mkdir $DIR_FILE/eTHR/Partitions/$list2-$NOW
-	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Partitions/$list2-$NOW/$list2.img status=progress
+	mkdir $DIR_FILE/eTHR/Partitions/$(list2// /)_${dbrand// /_}_${dinfo// /_}-$NOW
+    
+	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Partitions/$(list2// /)_${dbrand// /_}_${dinfo// /_}-$NOW/$list2.img status=progress
 	
 	echo ""
 	echo $blue "Type [Enter] key to continue..." $clear
@@ -427,13 +460,24 @@ function write_dump() {
 function read_dump() {
    echo "Read & Saving Dump eMMC"
    echo " "
-   echo "Please input name for saving Dump file : "
-   read rdmp
-   
-	mkdir $DIR_FILE/eTHR/Dump/$rdmp-$NOW
-	dd if=$TARGET_USB/sda of=$DIR_FILE/eTHR/Dump/$rdmp-$NOW/userarea.bin status=progress
+   mount_system
+   echo " "
+    
+    dbrand=$(grep -i ro.product.brand= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    dmodel=$(grep -i ro.product.model= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    dname=$(grep -i ro.product.device= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    
+    if [ "$dmodel == $dname" ]; then
+    dinfo=$dmodel
+    else 
+    dinfo=$dmodel_$dname
+    fi
+    
+  mkdir $DIR_FILE/eTHR/Dump/${dbrand// /_}_${dinfo// /_}-$NOW
+	
+	dd if=$TARGET_USB/sda of=$DIR_FILE/eTHR/Dump/${dbrand// /_}_${dinfo// /_}-$NOW/userarea.bin status=progress
 	echo "Success!"
-	echo "Saved to $DIR_FILE/eTHR/Dump/$rdmp-$NOW..."
+	echo "Saved to $DIR_FILE/eTHR/Dump/${dbrand// /_}_${dinfo// /_}-$NOW..."
 	
 	echo ""
 	echo $blue "Type [Enter] key to continue..." $clear
