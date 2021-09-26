@@ -9,8 +9,10 @@ Instructions :
 Part A installation
 1. Download eTHR & mke2fs as RAW files
 2. Copy both files to /system/bin directory
-3. Set both permission files to 755 or open terminal to run commands :
+3. Set both permission files to 755 or open termux to run commands :
+
    chmod 755 /system/bin/eTHR && chmod 755 /system/bin/mke2fs
+
 4. Connect eTHR to Android with USB OTG
 5. Open termux and run command :
 
@@ -22,11 +24,17 @@ Part B Prepairing Termux
 1. Download Termux on Playstore
 2. Open Thermux
 3. Run this command
+
 apt-get install mc
+
 apt-get install git
+
 git clone https://www.github.com/ASHWIN990/Termux-sudo.git
+
 cd Termux-sudo
+
 chmod +x install-sudo.sh
+
  ./install-sudo.sh
 
 Finish...
