@@ -419,9 +419,9 @@ function read_single_partition() {
 	select list2 in $(ls $TARGET_USB/by-name)
 	do
 	echo "Partition selected is ::" $list2
-	mkdir $DIR_FILE/eTHR/Partitions/$(list2// /)_${dbrand// /_}_${dinfo// /_}-$NOW
+	mkdir $DIR_FILE/eTHR/Partitions/$list2_${dbrand// /_}_${dinfo// /_}-$NOW
     
-	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Partitions/$(list2// /)_${dbrand// /_}_${dinfo// /_}-$NOW/$list2.img status=progress
+	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Partitions/$list2_${dbrand// /_}_${dinfo// /_}-$NOW/$list2.img status=progress
 	
 	echo ""
 	echo $blue "Type [Enter] key to continue..." $clear
