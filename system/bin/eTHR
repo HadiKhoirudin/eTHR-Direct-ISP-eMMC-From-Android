@@ -4,22 +4,8 @@
 # eTHR ISP Android CLI Tool - Hadi Khoirudin, S. Kom.
 # For Rooted Android Devices Version 1.6 - RC [26-09-2021]
 # 
-# Silahkan edit file ini untuk disesuaikan dengan HP yang akan digunakan.
-#
-# 1. Sambungkan eTHR melalui USB OTGnya
-# *Untuk mengetahui TARGET_USB silahkan : 
-# *Gunakan aplikasi Root Explorer
-# *Buka file yang bernama fstab
-# *Misal : fstab.qcom fstab.sc8920 dll
-# *Temukan baris usb
-# *Misal : /dev/block/platform/soc/7000000.ssusb/7000000.dwc3/xhci-hcd.0.auto*
-# *Kemudian ubah menjadi : /dev/block/platform/soc/7000000.ssusb/7000000.dwc3/xhci-hcd.0.auto
-#
-# 2. Ubah TARGET_USB ini dengan target yang telah disesuaikan seperti di atas :
-#
-TARGET_USB=/dev/block/platform/soc/7000000.ssusb/7000000.dwc3/xhci-hcd.0.auto
-#
-#
+# Auto detect USB path
+TARGET_USB=$(find /dev/block/platform -name "sda" | rev | cut -c 5- | rev) 
 #
 # Set default sdcard location for read & save file
 DIR_FILE=/sdcard
