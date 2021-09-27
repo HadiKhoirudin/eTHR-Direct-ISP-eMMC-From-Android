@@ -366,12 +366,12 @@ function remove_micloud() {
     echo " Unlocking MiCloud...." 
     dd if=/dev/zero of=$TARGET_USB/by-name/persist bs=512 count=$cntpersist status=progress
     
-    dd if=/dev/zero of=$TARGET_USB/by-name/persistbak bs=512 count=$cntpersistbak status=progress
+##dd if=/dev/zero of=$TARGET_USB/by-name/persistbak bs=512 count=$cntpersistbak status=progress
     
     echo " " 
     echo "Success!"
     
-    echo " If device can't start / bootloop just write saved files above." 
+    echo " If device can't start / bootloop just write saved files." 
     
     
 	echo ""
