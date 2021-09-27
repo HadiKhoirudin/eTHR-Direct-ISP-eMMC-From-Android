@@ -214,7 +214,8 @@ function remove_frp() {
     dinfo=$dmodel_$dname
     fi
     
-    mkdir $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW
+    dtdir=${dbrand// /_}_${dinfo// /_}-$NOW
+    
     
     if [ -e "$TARGET_USB/by-name/frp" ] ; then
     echo "Backing-up Necessary Partition Before Remove FRP..."
@@ -222,12 +223,14 @@ function remove_frp() {
     
     sleep 3
     
-    dd if=$TARGET_USB/by-name/frp of=$DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/frp.img status=progress
+    mkdir $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir
+    
+    dd if=$TARGET_USB/by-name/frp of=$DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/frp.img status=progress
     
     cntfrp=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/frp.img | cut -d '/ /' -f 1)
     
     echo " " 
-    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW $clear
+    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir $clear
     
     sleep 5
     
@@ -244,18 +247,48 @@ function remove_frp() {
 	read pause
     umount_system
     
+    elif [ -e "$TARGET_USB/by-name/persistent" ] ; then
+    echo "Backing-up Necessary Partition Before Remove FRP..."
+    echo " "
+    
+    sleep 3
+    mkdir $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir
+    
+    dd if=$TARGET_USB/by-name/persistent of=$DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/persistent.img status=progress
+    
+    cntpersistent=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/persistent.img | cut -d '/ /' -f 1)
+    
+    echo " " 
+    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir $clear
+    
+    sleep 5
+    
+    echo " " 
+    echo " Removing FRP / Google Account...." 
+    
+    dd if=/dev/zero of=$TARGET_USB/by-name/persistent bs=512 count=$cntpersistent status=progress
+    
+    echo ""
+    echo "Success!"
+    
+	echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+	read pause
+    umount_system
+    
     elif [ -e "$TARGET_USB/by-name/persist" ] ; then
     echo "Backing-up Necessary Partition Before Remove FRP..."
     echo " "
     
     sleep 3
+    mkdir $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir
     
-    dd if=$TARGET_USB/by-name/persist of=$DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persist.img status=progress
+    dd if=$TARGET_USB/by-name/persist of=$DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/persist.img status=progress
     
-    cntpersist=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persist.img | cut -d '/ /' -f 1)
+    cntpersist=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/persist.img | cut -d '/ /' -f 1)
     
     echo " " 
-    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW $clear
+    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir $clear
     
     sleep 5
     
@@ -272,6 +305,7 @@ function remove_frp() {
 	read pause
     umount_system
     
+    
     else
     echo -e $red "Error! This Device Has No FRP Partition."$clear
     echo -e $red "Operation Aborted..."$clear
@@ -281,6 +315,7 @@ function remove_frp() {
     read pause
     fi
 	echo ""
+	umount_system
 }
 
 function remove_micloud() {
@@ -292,10 +327,10 @@ function remove_micloud() {
     
     mount_system
     echo " "
+    
     dbrand=$(grep -i ro.product.brand= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
     dmodel=$(grep -i ro.product.model= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
     dname=$(grep -i ro.product.device= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
-    
     
     if [ "$dmodel == $dname" ]; then
     dinfo=$dmodel
@@ -303,24 +338,27 @@ function remove_micloud() {
     dinfo=$dmodel_$dname
     fi
     
+    dtdir=${dbrand// /_}_${dinfo// /_}-$NOW
+    
+    
     
     echo "Backing-up Necessary Partition Before Unlock MiCloud..."
     echo " "
     
     sleep 3
     
-    mkdir $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW
+    mkdir $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir
     
-    dd if=$TARGET_USB/by-name/persist of=$DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persist.img status=progress
+    dd if=$TARGET_USB/by-name/persist of=$DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persist.img status=progress
     
-    cntpersist=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persist.img | cut -d '/ /' -f 1)
+    cntpersist=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persist.img | cut -d '/ /' -f 1)
     
-    dd if=$TARGET_USB/by-name/persistbak of=$DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persistbak.img status=progress
+    dd if=$TARGET_USB/by-name/persistbak of=$DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persistbak.img status=progress
     
-    cntpersistbak=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW/persistbak.img | cut -d '/ /' -f 1)
+    cntpersistbak=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persistbak.img | cut -d '/ /' -f 1)
     
     echo " " 
-    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/${dbrand// /_}_${dinfo// /_}-$NOW $clear
+    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir $clear
     
     sleep 5
     
@@ -405,10 +443,13 @@ function read_single_partition() {
 	select list2 in $(ls $TARGET_USB/by-name)
 	do
 	echo "Partition selected is ::" $list2
-	mkdir $DIR_FILE/eTHR/Partitions/$list2_${dbrand// /_}_${dinfo// /_}-$NOW
+	dtdir=$list2-${dbrand// /_}_${dinfo// /_}-$NOW
+	mkdir $DIR_FILE/eTHR/Partitions/$dtdir
     
-	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Partitions/$list2_${dbrand// /_}_${dinfo// /_}-$NOW/$list2.img status=progress
+	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Partitions/$dtdir/$list2.img status=progress
 	
+	echo ""
+	echo "Saved to $DIR_FILE/eTHR/Partitions/$dtdir..."
 	echo ""
 	echo $blue "Type [Enter] key to continue..." $clear
     read pause
@@ -459,11 +500,13 @@ function read_dump() {
     dinfo=$dmodel_$dname
     fi
     
-  mkdir $DIR_FILE/eTHR/Dump/${dbrand// /_}_${dinfo// /_}-$NOW
+    dtdir=${dbrand// /_}_${dinfo// /_}-$NOW
+    
+  mkdir $DIR_FILE/eTHR/Dump/$dtdir
 	
-	dd if=$TARGET_USB/sda of=$DIR_FILE/eTHR/Dump/${dbrand// /_}_${dinfo// /_}-$NOW/userarea.bin status=progress
+	dd if=$TARGET_USB/sda of=$DIR_FILE/eTHR/Dump/$dtdir/userarea.bin status=progress
 	echo "Success!"
-	echo "Saved to $DIR_FILE/eTHR/Dump/${dbrand// /_}_${dinfo// /_}-$NOW..."
+	echo "Saved to $DIR_FILE/eTHR/Dump/$dtdir..."
 	
 	echo ""
 	echo $blue "Type [Enter] key to continue..." $clear
@@ -600,21 +643,22 @@ $(ColorBlue '  Select Menu    :') "
         esac
 else
 echo -ne $blue" 
-* Identify Device
-* Format / Wipe Data
-* Remove PIN / Gesture Lockscreen
-* Remove FRP / Google Account
-* Remove MiCloud / Xiaomi Account
-* Mount & Explore Partition System / Userdata
-* Write & Read Single Partition
-* Write & Read Dump Userarea
-* Instant UBL Xiaomi
-* Pinout Direct ISP
+
+ * Identify Device
+ * Format / Wipe Data
+ * Remove PIN / Gesture Lockscreen
+ * Remove FRP / Google Account
+ * Remove MiCloud / Xiaomi Account
+ * Mount & Explore Partition System / Userdata
+ * Write & Read Single Partition
+ * Write & Read Dump Userarea
+ * Instant UBL Xiaomi
+ * Pinout Direct ISP
 "
 
 echo -ne $red"
-Error : eTHR not detected!
-Check USB OTG & eTHR connection then try again... 
+ Error : eTHR not detected!
+ Check USB OTG & eTHR connection then try again... 
 
 "$clear
 
