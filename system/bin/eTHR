@@ -104,11 +104,14 @@ function identify_device() {
     if grep -qs $DIR_SYSTEM /proc/mounts; then
     echo ""
         dbrand=$(grep -i ro.product.brand= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
-        echo "Device Brand : " $dbrand
         
     dmodel=$(grep -i ro.product.model= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
     
     dname=$(grep -i ro.product.device= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    
+    dsoftware=$(grep -i ro.build.fingerprint= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
+    
+    echo "Device Brand : " $dbrand
     
     if [ "$dmodel == $dname" ]; then
     echo "Device Model : " $dmodel
@@ -117,7 +120,6 @@ function identify_device() {
     echo "Device Name : " $dname
     fi
     
-    dsoftware=$(grep -i ro.build.fingerprint= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
     echo "Device Software : " $dsoftware
     
     echo ""
@@ -186,12 +188,10 @@ function remove_pin_gesture_lock() {
 	echo "PIN Gesture Lock Removed"
 	umount_userdata
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
-    read pause
 	else
 	     echo -e $red "Error! Partition Data Encrypted."
 	     echo - e $red" Please Format / Wipe Data."$clear
-        echo -e $red "Operation Aborted..."$clear
+	     echo -e $red "Operation Aborted..."$clear
   fi
 	echo ""
 	echo $blue "Type [Enter] key to continue..." $clear
@@ -227,7 +227,9 @@ function remove_frp() {
     
     dd if=$TARGET_USB/by-name/frp of=$DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/frp.img status=progress
     
-    cntfrp=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/${dbrand// /_}_${dinfo// /_}-$NOW/frp.img | cut -d '/ /' -f 1)
+    sleep 2
+    
+    cntfrp=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/frp.img | cut -d /   -f 1)
     
     echo " " 
     echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir $clear
@@ -237,7 +239,7 @@ function remove_frp() {
     echo " " 
     echo " Removing FRP / Google Account...." 
     
-    dd if=/dev/zero of=$TARGET_USB/by-name/frp bs=512 count=$cntfrp status=progress
+    dd if=/dev/zero of=$TARGET_USB/by-name/frp bs=$cntfrp count=$cntfrp iflag=fullblock status=progress
     
     echo ""
     echo "Success!"
@@ -256,7 +258,7 @@ function remove_frp() {
     
     dd if=$TARGET_USB/by-name/persistent of=$DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/persistent.img status=progress
     
-    cntpersistent=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/persistent.img | cut -d '/ /' -f 1)
+    cntpersistent=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/persistent.img | cut -d /   -f 1)
     
     echo " " 
     echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir $clear
@@ -266,7 +268,8 @@ function remove_frp() {
     echo " " 
     echo " Removing FRP / Google Account...." 
     
-    dd if=/dev/zero of=$TARGET_USB/by-name/persistent bs=512 count=$cntpersistent status=progress
+    dd if=/dev/zero of=$TARGET_USB/by-name/persistent bs=$cntpersistent count=$cntpersistent iflag=fullblock status=progress
+    
     
     echo ""
     echo "Success!"
@@ -285,7 +288,7 @@ function remove_frp() {
     
     dd if=$TARGET_USB/by-name/persist of=$DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/persist.img status=progress
     
-    cntpersist=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/persist.img | cut -d '/ /' -f 1)
+    cntpersist=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/persist.img | cut -d /   -f 1)
     
     echo " " 
     echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir $clear
@@ -295,7 +298,7 @@ function remove_frp() {
     echo " " 
     echo " Removing FRP / Google Account...." 
     
-    dd if=/dev/zero of=$TARGET_USB/by-name/persist bs=512 count=$cntpersist status=progress
+    dd if=/dev/zero of=$TARGET_USB/by-name/persist bs=$cntpersist count=$cntpersist iflag=fullblock status=progress
     
     echo ""
     echo "Success!"
@@ -304,7 +307,6 @@ function remove_frp() {
 	echo $blue "Type [Enter] key to continue..." $clear
 	read pause
     umount_system
-    
     
     else
     echo -e $red "Error! This Device Has No FRP Partition."$clear
@@ -321,7 +323,6 @@ function remove_frp() {
 function remove_micloud() {
     echo "Removing Xiaomi MiCloud Account"
     echo " "
-    
     
     if [ -e "$TARGET_USB/by-name/persist" ] ; then
     
@@ -340,8 +341,6 @@ function remove_micloud() {
     
     dtdir=${dbrand// /_}_${dinfo// /_}-$NOW
     
-    
-    
     echo "Backing-up Necessary Partition Before Unlock MiCloud..."
     echo " "
     
@@ -351,11 +350,11 @@ function remove_micloud() {
     
     dd if=$TARGET_USB/by-name/persist of=$DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persist.img status=progress
     
-    cntpersist=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persist.img | cut -d '/ /' -f 1)
+    cntpersist=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persist.img | cut -d /   -f 1)
     
     dd if=$TARGET_USB/by-name/persistbak of=$DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persistbak.img status=progress
     
-    cntpersistbak=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persistbak.img | cut -d '/ /' -f 1)
+    cntpersistbak=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persistbak.img | cut -d /   -f 1)
     
     echo " " 
     echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir $clear
@@ -364,15 +363,14 @@ function remove_micloud() {
     
     echo " " 
     echo " Unlocking MiCloud...." 
-    dd if=/dev/zero of=$TARGET_USB/by-name/persist bs=512 count=$cntpersist status=progress
+    dd if=/dev/zero of=$TARGET_USB/by-name/persist bs=$cntpersist count=$cntpersist status=progress
     
-##dd if=/dev/zero of=$TARGET_USB/by-name/persistbak bs=512 count=$cntpersistbak status=progress
+##dd if=/dev/zero of=$TARGET_USB/by-name/persistbak bs=$cntpersistbak count=$cntpersistbak iflag=fullblock status=progress
     
     echo " " 
     echo "Success!"
     
     echo " If device can't start / bootloop just write saved files." 
-    
     
 	echo ""
 	echo $blue "Type [Enter] key to continue..." $clear
@@ -389,7 +387,6 @@ function remove_micloud() {
     read pause
     fi
 	echo ""
-	
 }
 
 function write_single_partition() {
@@ -445,10 +442,9 @@ function read_single_partition() {
 	echo "Partition selected is ::" $list2
 	dtdir=$list2-${dbrand// /_}_${dinfo// /_}-$NOW
 	mkdir $DIR_FILE/eTHR/Partitions/$dtdir
-    
+	
 	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Partitions/$dtdir/$list2.img status=progress
 	
-	echo ""
 	echo "Saved to $DIR_FILE/eTHR/Partitions/$dtdir..."
 	echo ""
 	echo $blue "Type [Enter] key to continue..." $clear
@@ -456,7 +452,9 @@ function read_single_partition() {
     
 	break
 	done
-
+	
+	umount_system
+	
 	echo ""
 }
 
@@ -502,7 +500,7 @@ function read_dump() {
     
     dtdir=${dbrand// /_}_${dinfo// /_}-$NOW
     
-  mkdir $DIR_FILE/eTHR/Dump/$dtdir
+    mkdir $DIR_FILE/eTHR/Dump/$dtdir
 	
 	dd if=$TARGET_USB/sda of=$DIR_FILE/eTHR/Dump/$dtdir/userarea.bin status=progress
 	echo "Success!"
@@ -545,6 +543,7 @@ function ubl_xiaomi() {
 	done
 
 	echo ""
+	
 }
 
 function pinout_direct_isp() {
@@ -560,6 +559,7 @@ function pinout_direct_isp() {
 	done
 
 	echo ""
+	
 }
 
 function auto_unmount() {
