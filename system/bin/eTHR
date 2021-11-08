@@ -83,7 +83,7 @@ echo -ne "
 echo -ne $green "       Created By : Hadi Khoirudin, S. Kom. [08/11/2021]   " $clear
 
 echo " "
-
+auto_umount
 # Getting info from device	
 if [ -e "$TARGET_USB/by-name/system" ] ; then
 	echo ""
@@ -232,7 +232,6 @@ else
 	echo $blue "Type [Enter] key to continue..." $clear
     read pause
     
-    SomethingWrong
 fi
 }
 
@@ -268,10 +267,10 @@ fi
 function format_data() {
     echo "Formating / Wiping Data"
 	mount_userdata
-	sleep 4
-	if [ -e "$DIR_DATA/app" ] ; then
-	rm -rf $DIR_DATA/*
-	mkdir $DIR_DATA/app
+	if [ -e "$DIR_DATA/media" ] ; then
+	sleep 3
+	cd /$DIR_DATA
+	ls -a | grep -v "media" | xargs rm -frv
 	echo "Success! Data Wiped."
 	else
 	if grep -qs $DIR_DATA /proc/mounts; then
