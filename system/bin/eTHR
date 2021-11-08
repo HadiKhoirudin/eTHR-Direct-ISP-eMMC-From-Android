@@ -2,7 +2,7 @@
 ##################################################
 #
 # eTHR ISP Android CLI Tool - Hadi Khoirudin, S. Kom.
-# For Rooted Android Devices Version 1.7 - RC [07-11-2021]
+# For Rooted Android Devices Version 1.7 - RC [08-11-2021]
 # 
 ##################################################
 
@@ -78,9 +78,9 @@ if [ -e "/data/data/com.termux/files/usr/bin/screenfetch" ] ; then
 	screenfetch -A Mint;
 fi
 echo -ne "
-      [ eTHR - Direct ISP Android CLI eMMC Tool V1.7 - RC ]     " 
+     [ eTHR - Direct ISP Android CLI eMMC Tool V1.7 - RC ]     " 
       
-echo -ne $green "       Created By : Hadi Khoirudin, S. Kom. [07/11/2021]   " $clear
+echo -ne $green "       Created By : Hadi Khoirudin, S. Kom. [08/11/2021]   " $clear
 
 echo " "
 
@@ -128,26 +128,37 @@ fi
 
 if [ -f "$DIR_SYSTEM/build.prop" ] ; then
 	frp=$(grep -i frp -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2 | rev | cut -d / -f 1| rev)
+	
+	if [ -e $TARGET_USB/by-name/$frp ] ; then
 	echo "FRP path : " $TARGET_USB/by-name/$frp
+	else
+	frp=""
+	fi
 	
 	elif [ -f "$DIR_VENDOR/build.prop" ] ; then
 	frp=$(grep -i frp -a $DIR_VENDOR/build.prop | cut -d '=' -f 2 | rev | cut -d / -f 1| rev)
+		
+	if [ -e $TARGET_USB/by-name/$frp ] ; then
 	echo "FRP path : " $TARGET_USB/by-name/$frp
+	else
+	frp=""
+	fi
+	
 fi
 
 if [ -z "$frp" ] ; then
 	
 	if [ -e $TARGET_USB/by-name/frp ] ; then
 	frp=$(find $TARGET_USB/by-name -name "frp" | rev | cut -d / -f 1| rev)
-	echo "FRP path : " $TARGET_USB/by-name/$frp
+	echo "FRP path : " $TARGET_USB/by-name/frp
 	
 	elif [ -e $TARGET_USB/by-name/persistent ] ; then
 	frp=$(find $TARGET_USB/by-name -name "persistent" | rev | cut -d / -f 1| rev)
-	echo "FRP path : " $TARGET_USB/by-name/$frp
+	echo "FRP path : " $TARGET_USB/by-name/persistent
 	
 	elif [ -e $TARGET_USB/by-name/persist ] ; then
 	frp=frp=$(find $TARGET_USB/by-name -name "persist" | rev | cut -d / -f 1| rev)
-	echo "FRP path : " $TARGET_USB/by-name/$frp
+	echo "FRP path : " $TARGET_USB/by-name/persist
 	
 	else
 	echo "Device Has FRP Partition : No"
@@ -157,8 +168,7 @@ fi
 
 
 echo "****************************************************************"
-	umount_system
-	umount_vendor
+	auto_umount
 	fi
 	else
 	if [ -e "$TARGET_USB/sda" ] ; then
@@ -178,7 +188,6 @@ function identify_device() {
 
 function mount_userdata() {
 if [ -e "$TARGET_USB/by-name/userdata" ] ; then
-    echo "Mounting Data Partition"
     mount -t auto $TARGET_USB/by-name/userdata $DIR_DATA
     mount -o rw,remount $DIR_DATA
 else
@@ -195,12 +204,28 @@ fi
 
 function mount_system() {
 if [ -e "$TARGET_USB/by-name/system" ] ; then
-    echo "Mounting System Partition"
     mount -t auto $TARGET_USB/by-name/system $DIR_SYSTEM
     mount -o rw,remount $DIR_SYSTEM
 else
     echo " "
     echo -e $red " Error! Partition System not found." 
+    echo " Please check Direct ISP connection..."$clear
+    
+    echo ""
+	echo $blue "Type [Enter] key to continue..." $clear
+    read pause
+    
+    SomethingWrong
+fi
+}
+
+function mount_vendor() {
+if [ -e "$TARGET_USB/by-name/vendor" ] ; then
+    mount -t auto $TARGET_USB/by-name/vendor $DIR_VENDOR
+    mount -o rw,remount $DIR_VENDOR
+else
+    echo " "
+    echo -e $red " Error! Partition Vendor not found." 
     echo " Please check Direct ISP connection..."$clear
     
     echo ""
@@ -219,27 +244,23 @@ function mount_explore_system_userdata() {
     echo ""
     echo $blue "Type [Enter] key to continue..." $clear
     read pause
-    umount_userdata
-    umount_system
+    auto_umount
 }
 
 function umount_userdata() {
 if grep -qs $DIR_DATA /proc/mounts; then 
-	echo "  Umount Data Partition"
 	umount $DIR_DATA
 fi
 }
 
 function umount_system() {
 if grep -qs $DIR_SYSTEM /proc/mounts; then 
-	echo "  Umount Data Partition"
 	umount $DIR_SYSTEM
 fi
 }
 
 function umount_vendor() {
 if grep -qs $DIR_VENDOR /proc/mounts; then 
-	echo "  Umount Data Partition"
 	umount $DIR_VENDOR
 fi
 }
@@ -559,8 +580,6 @@ function auto_umount() {
 umount_userdata
 umount_system
 umount_vendor
-
-clear
 }
 
 function SomethingWrong() {
@@ -624,7 +643,7 @@ $(ColorBlue '  Select Menu    :') "
 	        10) read_dump ; menu ;;
 	        11) ubl_xiaomi ; menu ;;
 	        12) pinout_direct_isp ; menu ;;
-		0) auto_umount ; exit 0 ;;
+		0) auto_umount ; clear; exit 0 ;;
 		*) echo " " ; echo -e $red"   Wrong input."$clear; SomethingWrong;;
         esac
 else
