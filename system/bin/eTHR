@@ -100,9 +100,8 @@ fi
 if grep -qs $DIR_SYSTEM /proc/mounts; then
 	echo "****************************************************************"
 	echo "DEVICE INFORMATION"
-	
     
-	echo " "
+	echo ""
 	dbrand=$(grep -i ro.product.brand= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
 	
 	dmodel=$(grep -i ro.product.model= -a $DIR_SYSTEM/build.prop | cut -d '=' -f 2)
@@ -148,14 +147,17 @@ fi
 
 if [ -z "$frp" ] ; then
 	
+	# FRP General (MTK SPRD UNISOC BCM etc...)
 	if [ -e $TARGET_USB/by-name/frp ] ; then
 	frp=$(find $TARGET_USB/by-name -name "frp" | rev | cut -d / -f 1| rev)
 	echo "FRP path : " $TARGET_USB/by-name/frp
 	
+	# FRP New Security (SAMSUNG LG SONY etc...)
 	elif [ -e $TARGET_USB/by-name/persistent ] ; then
 	frp=$(find $TARGET_USB/by-name -name "persistent" | rev | cut -d / -f 1| rev)
 	echo "FRP path : " $TARGET_USB/by-name/persistent
 	
+	# FRP Old Security / Xiaomi MiCloud
 	elif [ -e $TARGET_USB/by-name/persist ] ; then
 	frp=frp=$(find $TARGET_USB/by-name -name "persist" | rev | cut -d / -f 1| rev)
 	echo "FRP path : " $TARGET_USB/by-name/persist
@@ -166,16 +168,15 @@ fi
 
 fi
 
-
 echo "****************************************************************"
 	auto_umount
 	fi
 	else
 	if [ -e "$TARGET_USB/sda" ] ; then
-	echo " "
+	echo ""
 	echo "****************************************************************"
 	echo -e $yellow "Warning! \n This device hasn't contain any partitions."
-	echo "\n Please check Direct ISP connection \n or write dump userarea backup into this device!"$clear
+	echo "\n Please check Direct ISP connection \n or write dump userarea backup into this device!" $clear
 	echo "****************************************************************"
 	echo ""
 	fi
@@ -191,12 +192,11 @@ if [ -e "$TARGET_USB/by-name/userdata" ] ; then
     mount -t auto $TARGET_USB/by-name/userdata $DIR_DATA
     mount -o rw,remount $DIR_DATA
 else
-    echo " "
-    echo -e $red " Error! Partition Userdata not found."
-    echo "  Please check Direct ISP connection."$clear
+    echo ""
+    echo -e $red "  Error! Partition Userdata not found. \n  Please check Direct ISP connection \n or write dump userarea backup into this device!."$clear
     
     echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
 fi
@@ -207,12 +207,11 @@ if [ -e "$TARGET_USB/by-name/system" ] ; then
     mount -t auto $TARGET_USB/by-name/system $DIR_SYSTEM
     mount -o rw,remount $DIR_SYSTEM
 else
-    echo " "
-    echo -e $red " Error! Partition System not found." 
-    echo " Please check Direct ISP connection..."$clear
+    echo ""
+    echo -e $red "  Error! Partition System not found. \n  Please check Direct ISP connection \n or write dump userarea backup into this device!."$clear
     
     echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
     SomethingWrong
@@ -224,12 +223,11 @@ if [ -e "$TARGET_USB/by-name/vendor" ] ; then
     mount -t auto $TARGET_USB/by-name/vendor $DIR_VENDOR
     mount -o rw,remount $DIR_VENDOR
 else
-    echo " "
-    echo -e $red " Error! Partition Vendor not found." 
-    echo " Please check Direct ISP connection..."$clear
+    echo ""
+    echo -e $red "  Error! Partition Vendor not found. \n  Please check Direct ISP connection \n or write dump userarea backup into this device!."$clear
     
     echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
 fi
@@ -241,7 +239,7 @@ function mount_explore_system_userdata() {
     mount_system
     cd /storage/eTHR/ && mc
     echo ""
-    echo $blue "Type [Enter] key to continue..." $clear
+    echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     auto_umount
 }
@@ -265,30 +263,38 @@ fi
 }
 
 function format_data() {
-    echo "Formating / Wiping Data"
+echo ""
+    echo "  Formating / Wiping Data"
 	mount_userdata
 	if [ -e "$DIR_DATA/media" ] ; then
 	sleep 3
 	cd /$DIR_DATA
 	ls -a | grep -v "media" | xargs rm -frv
-	echo "Success! Data Wiped."
+	
+  if [ -e "$DIR_DATA/mediadrm" ] ; then
+	rm -frv $DIR_DATA/mediadrm
+ fi
+ 
+	echo "  Success! Data Wiped."
+	umount_userdata
 	else
 	if grep -qs $DIR_DATA /proc/mounts; then
 	umount_userdata
 	fi
 	sleep 4
-	echo "Formating Data Partition..."
+	echo "  Formating Data Partition..."
 	/system/bin/mke2fs -t ext4 -F $TARGET_USB/by-name/userdata
 	echo ""
-	echo "Success! Data Formated."
+	echo "  Success! Data Formated."
 	fi
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
 }
 
 function remove_pin_gesture_lock() {
-   echo "Removing PIN Gesture Lockscreen"
+echo ""
+   echo "  Removing PIN Gesture Lockscreen"
    
 	mount_userdata
 	
@@ -297,37 +303,36 @@ function remove_pin_gesture_lock() {
 	cd $DIR_DATA/system
 	rm *.key
 	cd /
-	echo "PIN Gesture Lock Removed"
+	echo "  PIN Gesture Lock Removed"
 	umount_userdata
 	echo ""
 	else
-	     echo -e $red "Error! Partition Data Encrypted."
-	     echo - e $red" Please Format / Wipe Data."$clear
-	     echo -e $red "Operation Aborted..."$clear
+	echo ""
+	     echo -e $red "  Error! \n   Partition Data Encrypted. \n   Please Format / Wipe Data. \n   Operation Aborted..."$clear
   fi
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
 }
 
 function remove_frp() {
 
 if [ -z "$frp" ] ; then
-    echo -e $red "Error! This Device Has No FRP Partition."$clear
-    echo -e $red "Operation Aborted..."$clear
+echo "" 
+    echo -e $red "  Error! \n  This Device Has No FRP Partition. \n  Operation Aborted..."$clear
     
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
     else
 	echo ""
-	echo "Removing FRP / Google Account"
+	echo "  Removing FRP / Google Account"
 	echo " "
     
     dtdir=${dbrand// /_}_${dinfo// /_}-$NOW
     
-    echo "Backing-up Necessary Partition Before Remove FRP..."
+    echo "  Backing-up Necessary Partition Before Remove FRP..."
     
     sleep 3
     
@@ -339,37 +344,35 @@ if [ -z "$frp" ] ; then
     
     cntfrp=$(du $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/$frp.img | cut -d /   -f 1)
     
-    echo " " 
-    echo "Removing FRP / Google Account...." 
+    echo ""
+    echo "  Removing FRP / Google Account...." 
     
     dd if=/dev/zero of=$TARGET_USB/by-name/$frp bs=$cntfrp count=$cntfrp iflag=fullblock status=progress
     
-    echo " " 
-    echo $green "Necessary partition has been saved into : "
-    echo $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/$frp.img $clear
+    echo ""
+    echo $green "  Necessary partition has been saved into : " $DIR_FILE/eTHR/Partitions/FRP_backup/$dtdir/$frp.img $clear
     
     echo ""
-    echo "Success!"
+    echo "  Success!"
     
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
 	read pause
     
 fi
-    
-	
 }
 
 function remove_micloud() {
-    echo "Removing Xiaomi MiCloud Account"
-    echo " "
+echo ""
+    echo "  Removing Xiaomi MiCloud Account"
+    echo ""
     
     if [ -e "$TARGET_USB/by-name/persist" ] ; then
     
     dtdir=${dbrand// /_}_${dinfo// /_}-$NOW
     
-    echo "Backing-up Necessary Partition Before Unlock MiCloud..."
-    echo " "
+    echo "  Backing-up Necessary Partition Before Unlock MiCloud..."
+    echo ""
     
     sleep 3
     
@@ -383,8 +386,8 @@ function remove_micloud() {
     
     cntpersistbak=$(du $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir/persistbak.img | cut -d /   -f 1)
     
-    echo " " 
-    echo $green "Necessary partition has been saved into : " $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir $clear
+    echo ""
+    echo $green "  Necessary partition has been saved into : " $DIR_FILE/eTHR/Xiaomi/MiCloud_backup/$dtdir $clear
     
     sleep 5
     
@@ -394,49 +397,48 @@ function remove_micloud() {
     
 ##dd if=/dev/zero of=$TARGET_USB/by-name/persistbak bs=$cntpersistbak count=$cntpersistbak iflag=fullblock status=progress
     
-    echo " " 
-    echo "Success!"
+    echo "" 
+    echo "  Success!"
     
-    echo " If device can't start / bootloop just write saved files." 
+    echo "  If device can't start / bootloop just write saved files." 
     
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
 	echo ""
 	
 	else
-	 echo -e $red "Error! This Device Has No MiCloud Partition."$clear
-    echo -e $red "Operation Aborted..."$clear
+	 echo -e $red "  Error! \n  This Device Has No MiCloud Partition. \n  Operation Aborted..."$clear
     
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     fi
 	echo ""
 }
 
 function write_single_partition() {
-   echo "Write Single Partition to eMMC"
+echo ""
+   echo "  Write Single Partition to eMMC"
 	echo ""
-   echo "Select Partition :"
+   echo "  Select Partition :"
 	
 	select list1 in $(ls $TARGET_USB/by-name)
 	do
-	echo "Partition selected is ::" $list1
+	echo "  Partition selected is ::" $list1
 	if [ -f "$DIR_FILE/eTHR/Partitions/Write/$list1.img" ] ; then
 	dd if=$DIR_FILE/eTHR/Partitions/Write/$list1.img of=$TARGET_USB/by-name/$list1 status=progress
 	
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
 	else
-	echo -e $red "Error! Can't write partition."
-	echo " Missing file or wrong input!::" $clear
+	echo -e $red "  Error! \n  Can't write partition. \n  Missing file or wrong input!::" $clear
 	
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
 	fi
@@ -447,14 +449,15 @@ function write_single_partition() {
 }
 
 function read_single_partition() {
-   echo "Read Single Partition from eMMC"
+echo ""
+   echo "  Read Single Partition from eMMC"
 	echo ""
     
-    echo "Select Partition :"
+    echo "  Select Partition :"
 	
 	select list2 in $(ls $TARGET_USB/by-name)
 	do
-	echo "Partition selected is ::" $list2
+	echo "  Partition selected is ::" $list2
 	dtdir=$list2-${dbrand// /_}_${dinfo// /_}-$NOW
 	
 	
@@ -464,17 +467,16 @@ function read_single_partition() {
 	
 	dd if=$TARGET_USB/by-name/$list2 of=$DIR_FILE/eTHR/Partitions/$dtdir/$list2.img status=progress
 	
-	echo "Saved to $DIR_FILE/eTHR/Partitions/$dtdir..."
+	echo "  Saved to $DIR_FILE/eTHR/Partitions/$dtdir..."
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
     else
-	echo -e $red "Error! Can't read partition."
-	echo " Wrong input" $clear
+	echo -e $red "  Error! \n  Can't read partition. \n  Wrong input" $clear
 	
     echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     fi
 	break
@@ -484,23 +486,24 @@ function read_single_partition() {
 }
 
 function write_dump() {
-   echo "Write Dump Userarea to eMMC..."
+echo ""
+   echo "  Write Dump Userarea to eMMC..."
    echo ""
    
 	select list5 in $(ls $DIR_FILE/eTHR/Dump)
 	do
 	
 	if [ -e "$DIR_FILE/eTHR/Dump/$list5/userarea.bin" ] ; then
-	echo "Write Userarea Dump file to eMMC..."
+	echo "  Write Userarea Dump file to eMMC..."
 	dd if=$DIR_FILE/eTHR/Dump/$list5/userarea.bin of=$TARGET_USB/sda status=progress
-	echo " "
-	echo "Success! Userarea Dump Writed to eMMC..."
+	echo ""
+	echo "  Success! Userarea Dump Writed to eMMC..."
 	else
-	echo -e $red "Error! Missing userarea.bin file."$clear
+	echo -e $red "  Error! \n  Missing userarea.bin file."$clear
 	fi
 	
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
 	break
@@ -508,30 +511,31 @@ function write_dump() {
 }
 
 function read_dump() {
-   echo "Read & Saving Dump eMMC"
-   echo " "
+echo ""
+   echo "  Read & Saving Dump eMMC"
+   echo ""
    
     dtdir=${dbrand// /_}_${dinfo// /_}-$NOW
     
     mkdir $DIR_FILE/eTHR/Dump/$dtdir
 	
 	dd if=$TARGET_USB/sda of=$DIR_FILE/eTHR/Dump/$dtdir/userarea.bin status=progress
-	echo "Success!"
-	echo "Saved to $DIR_FILE/eTHR/Dump/$dtdir..."
+	echo "  Success! \n Dump file has been saved to $DIR_FILE/eTHR/Dump/$dtdir..."
 	
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
 }
 
 function ubl_xiaomi() {
-	echo "Instan UBL Xiaomi"
+echo ""
+	echo "  Instan UBL Xiaomi"
 	echo ""
-    echo "Select Xiaomi CodeName / Product :"
+    echo "  Select Xiaomi CodeName / Product :"
 	
 	select list3 in $(ls $DIR_FILE/eTHR/Xiaomi/UBL)
 	do
-	echo "Device selected is ::" $list3
+	echo "  Device selected is ::" $list3
 	if [ -e "$DIR_FILE/eTHR/Xiaomi/UBL/$list3" ] ; then
 	
 	mkdir $DIR_FILE/eTHR/Xiaomi/UBL_backup/$list3-$NOW
@@ -541,14 +545,14 @@ function ubl_xiaomi() {
 	dd if=$DIR_FILE/eTHR/Xiaomi/UBL/$list3/devinfo.img of=$TARGET_USB/by-name/devinfo status=progress
 	
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
 	else
-	echo -e $red "Error! Can't write devinfo."$clear
+	echo -e $red "  Error! \n  Can't write devinfo."$clear
 	
 	echo ""
-	echo $blue "Type [Enter] key to continue..." $clear
+	echo $blue "  Type [Enter] key to continue..." $clear
     read pause
     
 	fi
@@ -562,7 +566,7 @@ function ubl_xiaomi() {
 function pinout_direct_isp() {
 	echo ""
 
-    echo "Select Device:"
+    echo "  Select Pinout Device:"
 	
 	select list4 in $(ls $DIR_FILE/eTHR/Pinout)
 	do
@@ -586,18 +590,16 @@ sleep 2
 menu
 }
 ##################################################
-##
+
 # Color  Variables
-##
+
 red='\e[31m'
 green='\e[32m'
 yellow='\e[33m'
 blue='\e[34m'
 clear='\e[0m'
 
-##
 # Color Functions
-##
 
 function ColorGreen() {
 	echo -ne $green$1$clear
@@ -605,6 +607,7 @@ function ColorGreen() {
 function ColorBlue() {
 	echo -ne $blue$1$clear
 }
+##################################################
 
 function menu() {
 startup
@@ -627,10 +630,10 @@ $(ColorGreen '   11)') Instant UBL Xiaomi
 $(ColorGreen '   12)') Pinout Direct ISP
 $(ColorGreen '    0)')  Exit
 
-$(ColorBlue '  Select Menu    :') "
+$(ColorBlue '    Select Menu    :') "
         read a
         case $a in
-	        1) identify_device; menu ;;
+	       1) identify_device; menu ;;
 	        2) format_data ; menu ;;
 	        3) remove_pin_gesture_lock ; menu ;;
 	        4) remove_frp ; menu ;;
@@ -647,7 +650,6 @@ $(ColorBlue '  Select Menu    :') "
         esac
 else
 echo -ne $blue" 
-
  * Identify Device
  * Format / Wipe Data
  * Remove PIN / Gesture Lockscreen
@@ -661,7 +663,9 @@ echo -ne $blue"
 "
 
 echo -ne $red"
- Error : eTHR not detected!
+ Error!
+ eTHR not detected.
+ 
  Check USB OTG & eTHR connection then try again... 
 
 "$clear
