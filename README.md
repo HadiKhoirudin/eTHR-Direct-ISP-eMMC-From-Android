@@ -24,6 +24,7 @@ Part B Prepairing Termux
 1. Download Termux on Playstore
 2. Open Thermux
 3. Run this command
+
 apt-get update
 
 apt-get install mc
